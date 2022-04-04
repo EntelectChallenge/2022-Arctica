@@ -1,0 +1,13 @@
+
+.idea/
+
+Domain/bin/
+
+Domain/obj/
+
+Logger/bin/
+
+Logger/obj/
+
+publish/
+.vs/

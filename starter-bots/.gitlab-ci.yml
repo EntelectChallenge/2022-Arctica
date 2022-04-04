@@ -1,0 +1,110 @@
+image: docker:latest
+
+stages:
+  - build
+  - deploy
+
+# ==============================| VARIABLES |============================== #
+variables:
+  # REFERENCE BOT VERSION
+  REFERENCE_BOT_VERSION: "2022.1.0"
+
+  # STARTER BOT VERSIONS
+  DOT_NET_VERSION: "5.0"
+  NODE_VERSION: "12"
+
+  # AWS
+  DOCKER_REGISTRY: NOT_SET
+  REGION: $AWS_DEFAULT_REGION
+
+  # Misc
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: tcp://docker:2375
+
+# ==============================| REFERENCE BOT |============================== #
+build:reference:
+  stage: build
+  image: node:$NODE_VERSION
+  tags:
+    - aws
+  before_script:
+    - cd ./ReferenceBot
+    - npm ci
+  script:
+    - npm build
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH == "release"'
+      when: on_success
+  artifacts:
+    paths:
+      - ./ReferenceBot/publish/*
+    expire_in: 1 hour
+
+deploy:reference:
+  stage: deploy
+  image:
+    name: amazon/aws-cli
+    entrypoint: [ "" ]
+  needs: ["build:reference"]
+  tags:
+    - aws
+  services:
+    - docker:dind
+  variables:
+    APP_NAME: reference-bot
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: on_success
+      variables:
+        DEPLOYMENT_ROLE: $AWS_STAGING_CI_ROLE_ARN
+        DOCKER_REGISTRY: $AWS_STAGING_GAME_DOCKER_REPOSITORY
+    - if: '$CI_COMMIT_BRANCH == "release"'
+      when: on_success
+      variables:
+        DEPLOYMENT_ROLE: $AWS_PROD_CI_ROLE_ARN
+        DOCKER_REGISTRY: $AWS_PROD_GAME_DOCKER_REPOSITORY
+  before_script:
+    - amazon-linux-extras install docker
+    - aws --version
+    - docker --version
+    - echo "===== assuming permissions => ${DEPLOYMENT_ROLE} ====="
+    - KST=(`aws sts assume-role --role-arn ${DEPLOYMENT_ROLE} --role-session-name "deployment-${CI_COMMIT_TAG}" --query '[Credentials.AccessKeyId,Credentials.SecretAccessKey,Credentials.SessionToken]' --output text`)
+    - unset AWS_SECURITY_TOKEN
+    - export AWS_ACCESS_KEY_ID=${KST[0]}
+    - export AWS_SECRET_ACCESS_KEY=${KST[1]}
+    - export AWS_SESSION_TOKEN=${KST[2]}
+    - export AWS_SECURITY_TOKEN=${KST[2]}
+  script:
+    - cd ./ReferenceBot
+    - docker build -t $DOCKER_REGISTRY/$APP_NAME:$REFERENCE_BOT_VERSION -t $DOCKER_REGISTRY/$APP_NAME:latest .
+    - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+    - docker push $DOCKER_REGISTRY/$APP_NAME:$REFERENCE_BOT_VERSION
+    - docker push $DOCKER_REGISTRY/$APP_NAME:latest
+
+# ==============================| STARTER BOTS |============================== #
+
+build:dotnetcore:
+  stage: build
+  image: mcr.microsoft.com/dotnet/core/sdk:$DOT_NET_VERSION
+  tags:
+    - aws
+  script:
+    - cd ./NETCoreBot
+    - dotnet publish --configuration Release --output ./publish/
+  only:
+    - master-disabled
+
+build:javascript:
+  stage: build
+  image: node:$NODE_VERSION
+  tags:
+    - aws
+  before_script:
+    - cd ./JavascriptBot
+    - npm ci
+  script:
+    - npm build
+  only:
+    - master-disabled
