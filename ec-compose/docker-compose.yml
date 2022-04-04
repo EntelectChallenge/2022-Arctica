@@ -1,26 +1,35 @@
 version: "3.9"
 services:
   runner:
-    build: ../game-runner/
+    build:
+      context: ../game-runner
+      dockerfile: multi-stage.Dockerfile
+    container_name: GameRunner
     networks:
-      - network   
+      - network
     environment:
-      BOT_COUNT: 
+      BOT_COUNT:  1
     ports:
       - "5000:5000"
   engine:
-    build: ../game-engine
+    build:
+      context: ../game-engine
+      dockerfile: multi-stage.Dockerfile
+    container_name: GameEngine
     networks:
-      - network 
+      - network
     environment:
-      RunnerIp: runner
+      RunnerIp: runner # Should be the Docker Compose service name used for the runner.
       LOG_LEVEL: info
       BOT_COUNT: 1
     depends_on:
       - "runner"
       - "logger"
   logger:
-    build: ../game-logger
+    build:
+      context: ../game-logger
+      dockerfile: multi-stage.Dockerfile
+    container_name: GameLogger
     networks:
       - network
     environment:
