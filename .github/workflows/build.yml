@@ -3,13 +3,13 @@ name: Release
 on:
   push:
     branches:
-    - main
+    - master
     - develop
     tags:
     - '*'
   pull_request:
     branches:
-    - main
+    - master
     - develop
 
 jobs:
