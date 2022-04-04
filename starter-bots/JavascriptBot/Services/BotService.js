@@ -34,6 +34,9 @@ class BotService {
             case actionTypes.Lumber:
                 console.log('Lumbering');
                 return this.bot.lumber(unitAmount, targetNode);
+            case actionTypes.StartCampfire:
+                console.log('Starting Campfire');
+                return this.bot.startCampfire(unitAmount);
             default:
                 return null;
         }

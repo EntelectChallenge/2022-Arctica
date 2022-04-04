@@ -7,5 +7,7 @@ namespace Domain.Models
     {
         public World World { get; set; }
         public List<BotObject> Bots { get; set; }
+        public List<PopulationTier> PopulationTiers { get; set; }
+
     }
 }

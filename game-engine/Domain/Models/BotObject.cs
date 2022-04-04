@@ -109,7 +109,7 @@ namespace Domain.Models
             FarmingUnits = GetUnitsInAction(ActionType.Farm, gameState.World.CurrentTick),
             MiningUnits = GetUnitsInAction(ActionType.Mine, gameState.World.CurrentTick),
             LumberingUnits = GetUnitsInAction(ActionType.Lumber, gameState.World.CurrentTick),
-            ScoutingUnits = GetUnitsInAction(ActionType.Scout, gameState.World.CurrentTick),
+            ScoutingUnits = GetUnitsInAction(ActionType.Scout, gameState.World.CurrentTick),               
             // Gold = Gold,  
         };
 

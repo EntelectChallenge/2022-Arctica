@@ -63,12 +63,11 @@ Notes:
 All bots must listen to the following events that are announced by the hub:
 - `Registered`
 - `Disconnect`
-- `ReceiveGameState`
+- `ReceiveBotState`
 
 *More information on each of these events can be found [here](./game-runner/README.md#events)*
 
 You can optionally also listen to the following events:
-- `ReceivePlayerConsumed`
 - `ReceiveGameComplete`
 
 Example of registering an event listener:
@@ -132,23 +131,23 @@ In this callback, you will receive a new GUID.
 
 Now that you are set up and registered, you are ready to play the game.
 
-Once all bots have connected, a "Tick 0" Game State will be published on the `ReceiveGameState` listener.
+Once all bots have connected, a "Tick 0" Game State will be published on the `ReceiveBotState` listener.
 
 The engine will then pause for 5 seconds before starting the game, giving you time to establish any sort of map vision you need prior to starting.
 
-You already should have registered a listener and handler for the `ReceiveGameState` listener from Step 1.3, so let's take a look at how you can send commands
+You already should have registered a listener and handler for the `ReceiveBotState` listener from Step 1.3, so let's take a look at how you can send commands
 
 The Structure of this payload can be found [here](./game-engine/game-rules.md#game-tick-payload)
 
 ### 3.1 Send a command to the Runner
 
-Commands can be sent by sending a `PlayerAction` message to the runner.
+Commands can be sent by sending a `PlayerCommand` message to the runner.
 ```cs
-connection.SendAsync("SendPlayerAction", playerAction);
+connection.SendAsync("SendPlayerCommand", playerplayerCommandAction);
 ```
 *Note: Your client library might call this "Invoke" rather than "Send". There is a slight difference between them, but it has no impact on this game or the way your commands are processed*
 
-The structure of the `playerAction` payload can be found [here](./game-engine/game-rules.md#-command-structure)
+The structure of the `playerCommand` payload can be found [here](./game-engine/game-rules.md#-command-structure)
 
 ### 3.2 Send as many as you like!
 

@@ -11,5 +11,6 @@ namespace Domain.Models.DTOs
 
         // Used for the bot state
         public Guid BotId { get; set; }
+        public List<PopulationTier> PopulationTiers { get; set; }
     }
 }

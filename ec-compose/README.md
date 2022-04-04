@@ -4,14 +4,14 @@ This repo provides a convenient way to load and run all the engine components to
 
 ## Pre-requisites
 
-- .NET 5
-    - https://dotnet.microsoft.com/download/dotnet/5.0
+- .NET 6
+    - https://dotnet.microsoft.com/download/dotnet/6.0
 - Docker
     - https://www.docker.com/products/docker-desktop
 
 ## How to Use
 
-1. Clone the entire 2021-Galaxio Github Repository
+1. Clone the entire 2022-Arctica Github Repository
 2. Ensure the following folder structure on your drive:
     - ec-compose/
     - game-runner/

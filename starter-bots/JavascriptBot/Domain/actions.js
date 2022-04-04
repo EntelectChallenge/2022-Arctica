@@ -1,5 +1,7 @@
 const {actionTypes} = require('./enums');
 
+const emptyId = '00000000-0000-0000-0000-000000000000';
+
 const baseAction = (units, targetNode) => ({
     Units: units,
     Id: targetNode.id
@@ -25,4 +27,9 @@ const mineAction = (units, targetNode) => ({
     ...baseAction(units, targetNode)
 });
 
-module.exports = {scoutAction, farmAction, lumberAction, mineAction};
+const startCampfireAction = (units) => ({
+    Type: actionTypes.StartCampfire,
+    ...baseAction(units, {id: emptyId})
+});
+
+module.exports = {scoutAction, farmAction, lumberAction, mineAction, startCampfireAction};

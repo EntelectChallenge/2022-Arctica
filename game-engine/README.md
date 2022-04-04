@@ -17,17 +17,6 @@ When these are not specified, the values present in `appsettings.json` will be u
 
 The game map is additionally dynamically generated based on the number of bots given.
 
-The following fields in `appsettings.json` will be multiplied by the bot count given to generate the final world:
-
-- Map Radius
-- Max Rounds
-- Start Radius
-- Total starting food (WorldFood.StartingFoodCount)
-- Gas Cloud Max Count
-- Gas Cloud Modular
-- Asteroid Fields Max Count
-- Asteroid Fields Modular
-
 To compute the values of these fields at runtime, each of these fields has a corresponding `fieldnameRatio` named config item in `appsettings.json`
 This is ratio field is then multiplied by the bot count to generate the final world the game will start with.
 

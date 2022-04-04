@@ -3,7 +3,8 @@ const actionTypes = Object.freeze({
     Scout: 1,
     Mine: 2,
     Farm: 3,
-    Lumber: 4
+    Lumber: 4,
+    StartCampfire: 5
 });
 
 const resourceTypes = Object.freeze({

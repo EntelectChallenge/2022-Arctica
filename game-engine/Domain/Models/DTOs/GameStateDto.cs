@@ -9,6 +9,7 @@ namespace Domain.Models.DTOs
         public World World { get; set; }
         public List<BotDto> Bots { get; set; }
         public Guid BotId { get; set; }
+        public List<PopulationTier> PopulationTiers { get; set; }
 
         public override string ToString()
         {

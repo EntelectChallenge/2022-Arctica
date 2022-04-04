@@ -2,7 +2,7 @@
 
 The Entelect Challenge is an annual coding competition where students, professional developers, and enthusiasts develop an intelligent bot to play a game.
 
-This year, the game is Galaxio!
+This year, the game is Arctica!
 
 We have made it as simple as possible to get started. Just follow the steps below.
 
@@ -44,7 +44,7 @@ Improvements and enhancements will be made to the game engine code over time.  T
 The game engine has been made available to the community for peer review and bug fixes, so if you find any bugs or have any concerns, please [e-mail us](mailto:challenge@entelect.co.za) or discuss it with us on the [Challenge forum](http://forum.entelect.co.za/), alternatively submit a pull request on Github and we will review it.
 
 ## Starter Pack
-The starter pack will provide you with everything that you'll need to run your first bot and compete in this year's challenge. To get the starter pack, simply download the latest release found [here](https://github.com/EntelectChallenge/2021-Galaxio/releases/latest).
+The starter pack will provide you with everything that you'll need to run your first bot and compete in this year's challenge. To get the starter pack, simply download the latest release found [here](https://github.com/EntelectChallenge/2022-Arctica/releases/latest).
 
 More information on how to use this starter pack is included in the readme you'll receive inside it, as well as [here](./starter-bots/README.md)
 

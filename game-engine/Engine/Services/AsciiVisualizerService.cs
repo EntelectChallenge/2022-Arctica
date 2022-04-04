@@ -2,13 +2,13 @@
 using System.Linq;
 using Domain.Models;
 
-namespace Engine.Services;
+namespace Engine.Services { 
 
 public class AsciiVisualizerService
 {
     private char[,] Map;
     private int MapLength;
-   
+
     public AsciiVisualizerService(int mapLength)
     {
         Map = new char[mapLength, mapLength];
@@ -42,7 +42,8 @@ public class AsciiVisualizerService
     {
         return resourceNode.Type.ToString()[0];
     }
-    
-    
-    
+
+
+}
+
 }

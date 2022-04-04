@@ -82,10 +82,12 @@ namespace Engine.Services
                 stop2.Restart();
                 var gameStateDto = worldStateService.GetPublishedState();
                 var gameState = worldStateService.GetState();
+
                 foreach (var bot in worldStateService.GetPlayerBots())
                 {
                     var botGameState = new GameStateDto();
                     botGameState.BotId = bot.Id;
+                    botGameState.PopulationTiers = engineConfig.PopulationTiers.ToList();
                     botGameState.World = new World()
                     {
                         CurrentTick = gameState.World.CurrentTick,
@@ -109,8 +111,9 @@ namespace Engine.Services
                             return bot.ToStateObject(gameState);
                         }
 
+                        Console.WriteLine("new botDto");
                         return new BotDto()
-                        {
+                        {                    
                             Id = otherBot.Id,
                             Population = otherBot.GetPopulation(),
                             Food = otherBot.Food,
@@ -120,6 +123,8 @@ namespace Engine.Services
                             CurrentTierLevel = otherBot.CurrentTierLevel
                         };
                     }).ToList();
+
+
                     await hubConnection.InvokeAsync("PublishBotState", botGameState);
                 }
 

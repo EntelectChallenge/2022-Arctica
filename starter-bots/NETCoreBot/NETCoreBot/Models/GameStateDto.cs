@@ -1,11 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using Domain.Models;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 
 namespace NETCoreBot.Models
 {
     public class GameStateDto
     {
         public World World { get; set; }
-        public Dictionary<string, List<int>> GameObjects { get; set; }
-        public Dictionary<string, List<int>> PlayerObjects { get; set; }
+
+        public List<BotDto> Bots { get; set; }
+
+        public Guid BotId { get; set; }
+        public List<PopulationTier> PopulationTiers { get; set; }
+
     }
 }

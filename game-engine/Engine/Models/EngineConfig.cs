@@ -41,23 +41,6 @@ namespace Engine.Models
         public int MinimumUnits { get; set; }
     }
 
-    public class PopulationTier
-    {
-        public int Level { get; set; }
-        public string Name { get; set; }
-        public int MaxPopulation { get; set; }
-        public IList<double> PopulationChangeFactorRange { get; set; }
-        public TierResourceConstraints TierResourceConstraints { get; set; }
-    }
-
-    public class TierResourceConstraints
-    {
-        public int Food { get; set; }
-        public int Wood { get; set; }
-        public int Stone { get; set; }
-    }
-
-
     public class ResourceGenerationConfig
     {
         public RenewableResourceConfig Farm { get; set; }

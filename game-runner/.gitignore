@@ -29,3 +29,4 @@ publish/
 
 GameRunner.sln.DotSettings
 /.vs
+/GameRunner/GameRunner.csproj.user

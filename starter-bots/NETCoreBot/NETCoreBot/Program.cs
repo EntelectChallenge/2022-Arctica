@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Domain.Models;
 
 namespace NETCoreBot
 {
@@ -27,7 +28,7 @@ namespace NETCoreBot
             ip = ip.StartsWith("http://") ? ip : "http://" + ip;
 
             var port = Configuration.GetSection("RunnerPort");
-            
+
             var url = ip + ":" + port.Value + "/runnerhub";
 
             var connection = new HubConnectionBuilder()
@@ -60,37 +61,24 @@ namespace NETCoreBot
                             "Registered",
                             (id) =>
                             {
-                                Console.WriteLine("Registered with the runner");
+                                Console.WriteLine("Registered Bot with the runner");
                                 botService.SetBot(
-                                    new GameObject
+                                    new BotDto()
                                     {
-                                        Id = id,
-                                        GameObjectType = ObjectTypes.Player,
-                                        Position = new Position
-                                        {
-                                            X = 0,
-                                            Y = 0
-                                        },
-                                        Size = 10
+                                        Id = id
                                     });
                             });
 
                         /* Get the current WorldState along with the last known state of the current client. */
                         connection.On<GameStateDto>(
-                            "ReceiveGameState",
+                            "ReceiveBotState",
                             (gameStateDto) =>
                             {
-                                var gameState = new GameState{ World = null, GameObjects = new List<GameObject>(), PlayerGameObjects = new List<GameObject>()};
+                                Console.WriteLine("GameStateDTO hit");
+                                var gameState = new GameState { World = null, Bots = new List<BotDto>() };
                                 gameState.World = gameStateDto.World;
-                                foreach ((var id, List<int> state) in gameStateDto.GameObjects)
-                                {
-                                    gameState.GameObjects.Add(GameObject.FromStateList(Guid.Parse(id), state));
-                                }
+                                gameState.Bots = gameStateDto.Bots;
 
-                                foreach ((var id, List<int> state) in gameStateDto.PlayerObjects)
-                                {
-                                    gameState.PlayerGameObjects.Add(GameObject.FromStateList(Guid.Parse(id), state));
-                                }
                                 botService.SetGameState(gameState);
                             });
 
@@ -113,8 +101,11 @@ namespace NETCoreBot
                                 continue;
                             }
 
-                            botService.ComputeNextPlayerAction(botService.GetPlayerAction());
-                            connection.InvokeAsync("SendPlayerAction", botService.GetPlayerAction());
+                            if (botService.GetGameState().World != null)
+                            {
+                                botService.ComputeNextPlayerAction(botService.GetPlayerCommand());
+                                connection.InvokeAsync("SendPlayerCommand", botService.GetPlayerCommand());
+                            }
                         }
                     });
         }

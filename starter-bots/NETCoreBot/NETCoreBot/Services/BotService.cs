@@ -1,4 +1,5 @@
-﻿using NETCoreBot.Enums;
+﻿using Domain.Models;
+using NETCoreBot.Enums;
 using NETCoreBot.Models;
 using System;
 using System.Collections.Generic;
@@ -8,49 +9,69 @@ namespace NETCoreBot.Services
 {
     public class BotService
     {
-        private GameObject _bot;
-        private PlayerAction _playerAction;
+        private BotDto _bot;
+        private CommandAction _playerAction;
+        private PlayerCommand _playerCommand;
         private GameState _gameState;
 
         public BotService()
         {
-            _playerAction = new PlayerAction();
+            _playerAction = new CommandAction();
+            _playerCommand = new PlayerCommand();
             _gameState = new GameState();
+            _bot = new BotDto();
         }
 
-        public GameObject GetBot()
+        public BotDto GetBot()
         {
             return _bot;
         }
 
-        public PlayerAction GetPlayerAction()
+        public PlayerCommand GetPlayerCommand()
         {
-            return _playerAction;
-        }
 
-        public void SetBot(GameObject bot)
-        {
-            _bot = bot;
-        }
+            PlayerCommand playerCommand = new PlayerCommand();
 
-        public void ComputeNextPlayerAction(PlayerAction playerAction)
-        {
-            playerAction.Action = PlayerActions.Forward;
-            playerAction.Heading = new Random().Next(0, 359);
-
-            if (_gameState.GameObjects != null)
+            if (this._gameState.World != null)
             {
-                var foodList = _gameState.GameObjects
-                    .Where(item => item.GameObjectType == ObjectTypes.Food)
-                    .OrderBy(item => GetDistanceBetween(_bot, item))
-                    .ToList();
-            
-                playerAction.Heading = GetHeadingBetween(foodList.First());
+                if (this._gameState.World.Map.Nodes.Count > 0)
+                {
+                    playerCommand.Actions.Add(new CommandAction()
+                    {
+                        Type = ActionType.Farm,
+                        Units = this._gameState.Bots.FirstOrDefault(go => go.Id == _bot.Id).AvailableUnits,
+                        Id = this._gameState.World.Map.Nodes[0].Id,
+                    });
+
+                    playerCommand.PlayerId = this._bot.Id;
+                }
+                else
+                {
+                    playerCommand.Actions.Add(new CommandAction()
+                    {
+                        Type = ActionType.Scout,
+                        Units = 1,
+                        Id = this._gameState.World.Map.ScoutTowers[0].Id,
+                    });
+
+                    playerCommand.PlayerId = this._bot.Id;
+                }
             }
 
-            _playerAction = playerAction;
+            return playerCommand;
         }
-        
+
+        public void SetBot(BotDto bot)
+        {
+            _bot.Id = bot.Id;
+        }
+
+        public void ComputeNextPlayerAction(PlayerCommand playerCommand)
+        {
+
+            _playerAction = playerCommand.Actions[0];
+        }
+
         public GameState GetGameState()
         {
             return _gameState;
@@ -64,26 +85,37 @@ namespace NETCoreBot.Services
 
         private void UpdateSelfState()
         {
-            _bot = _gameState.PlayerGameObjects.FirstOrDefault(go => go.Id == _bot.Id);
+            _bot = _gameState.Bots.FirstOrDefault(go => go.Id == _bot.Id);
         }
-        
-        private double GetDistanceBetween(GameObject object1, GameObject object2)
+
+        private double GetDistanceBetween(GameObject location1, GameObject location2)
         {
-            var triangleX = Math.Abs(object1.Position.X - object2.Position.X);
-            var triangleY = Math.Abs(object1.Position.Y - object2.Position.Y);
-            return Math.Sqrt(triangleX * triangleX + triangleY * triangleY);
+            Position baseLocation = location1.Position;
+            Position nodeLocation = location2.Position;
+
+            double deltaX = baseLocation.X - nodeLocation.X;
+            double deltaY = baseLocation.Y - nodeLocation.Y;
+            var distanceSquared = (deltaX * deltaX) + (deltaY * deltaY);
+
+            double distance = Math.Sqrt(distanceSquared);
+
+            return distance;
         }
-        
-        private int GetHeadingBetween(GameObject otherObject)
+
+        private double GetDistanceBetweenBaseAndNode(Node node)
         {
-            var direction = ToDegrees(Math.Atan2(otherObject.Position.Y - _bot.Position.Y,
-                                                    otherObject.Position.X - _bot.Position.X));
-            return (direction + 360) % 360;
+
+            Position baseLocation = this._bot.BaseLocation;
+            Position nodeLocation = node.Position;
+
+            double deltaX = baseLocation.X - nodeLocation.X;
+            double deltaY = baseLocation.Y - nodeLocation.Y;
+            var distanceSquared = (deltaX * deltaX) + (deltaY * deltaY);
+
+            double distance = Math.Sqrt(distanceSquared);
+
+            return distance;
         }
-        
-        private int ToDegrees(double v)
-        {
-            return (int) (v * (180 / Math.PI));
-        }
+
     }
 }

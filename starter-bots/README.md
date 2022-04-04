@@ -44,13 +44,6 @@ For each of these, the following languages are supported:
     - Tensorflow
     - C++
 
-- Manual
-    - Java
-    - NodeJS
-    - .Net core
-    - Python
-    - Pytorch
-    - Tensorflow
 
 ## Okay, I'm really ready now! How do I build my _own_ bot?
 
