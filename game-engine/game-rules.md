@@ -629,7 +629,7 @@ The game engine uses C# which uses round-to-even or banker's rounding, which mea
 Take the following examples:
 
 - 23.5 will become 24
-- 24.5 will become 24
+- 24.4 will become 24
 - 24.6 will become 25
 - 25.5 will become 26
 
