@@ -10,12 +10,12 @@ public class ScoutTower extends GameObject {
     private List<UUID> nodes;
 
     public ScoutTower() {
-        super(GameObjectType.SCOUT_TOWER);
+        super(GameObjectType.SCOUT_TOWER.getValue());
         this.nodes = new ArrayList<>();
     }
 
     public ScoutTower(List<UUID> nodes) {
-        super(GameObjectType.SCOUT_TOWER);
+        super(GameObjectType.SCOUT_TOWER.getValue());
         this.nodes = nodes;
     }
 
@@ -27,10 +27,4 @@ public class ScoutTower extends GameObject {
         this.nodes = nodes;
     }
 
-    @Override
-    public String toString() {
-        return "ScoutTower{" +
-                "nodes=" + nodes +
-                '}';
-    }
 }

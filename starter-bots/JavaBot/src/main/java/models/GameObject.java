@@ -1,15 +1,13 @@
 package models;
 
-import enums.GameObjectType;
-
 import java.util.UUID;
 
 public abstract class GameObject {
     private UUID id;
-    private GameObjectType gameObjectType;
+    private int gameObjectType;
     private Position position;
 
-    public GameObject(GameObjectType gameObjectType) {
+    public GameObject(int gameObjectType) {
         this.gameObjectType = gameObjectType;
     }
 
@@ -21,11 +19,11 @@ public abstract class GameObject {
         this.id = id;
     }
 
-    public GameObjectType getGameObjectType() {
+    public int getGameObjectType() {
         return gameObjectType;
     }
 
-    public void setGameObjectType(GameObjectType gameObjectType) {
+    public void setGameObjectType(int gameObjectType) {
         this.gameObjectType = gameObjectType;
     }
 
@@ -36,4 +34,5 @@ public abstract class GameObject {
     public void setPosition(Position position) {
         this.position = position;
     }
+
 }

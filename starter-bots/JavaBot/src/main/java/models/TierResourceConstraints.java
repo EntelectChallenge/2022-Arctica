@@ -38,12 +38,4 @@ public class TierResourceConstraints {
         this.stone = stone;
     }
 
-    @Override
-    public String toString() {
-        return "TierResourceConstraints{" +
-                "food=" + food +
-                ", wood=" + wood +
-                ", stone=" + stone +
-                '}';
-    }
 }

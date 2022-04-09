@@ -60,14 +60,4 @@ public class PopulationTier {
         this.tierResourceConstraints = tierResourceConstraints;
     }
 
-    @Override
-    public String toString() {
-        return "PopulationTier{" +
-                "level=" + level +
-                ", name='" + name + '\'' +
-                ", maxPopulation=" + maxPopulation +
-                ", populationChangeFactorRange=" + populationChangeFactorRange +
-                ", tierResourceConstraints=" + tierResourceConstraints +
-                '}';
-    }
 }

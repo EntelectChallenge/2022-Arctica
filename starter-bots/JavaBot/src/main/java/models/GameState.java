@@ -51,13 +51,4 @@ public class GameState {
         this.populationTiers = populationTiers;
     }
 
-    @Override
-    public String toString() {
-        return "GameState{" +
-                "world=" + world +
-                ", bots=" + bots +
-                ", botId=" + botId +
-                ", populationTiers=" + populationTiers +
-                '}';
-    }
 }

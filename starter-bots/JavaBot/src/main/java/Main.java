@@ -1,5 +1,7 @@
+import com.google.gson.Gson;
 import com.microsoft.signalr.*;
 import models.GameState;
+import models.PlayerCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import services.BotService;
@@ -23,11 +25,11 @@ public class Main {
     private static final int GAME_LOOP_SLEEP_TIME = 30;
     // -----| END |-----
 
+    private static final Gson GSON = new Gson();
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    private static final BotService botService = new BotService();
+
     public static void main(String[] args) throws Exception {
-        Logger logger = LoggerFactory.getLogger(Main.class);
-
-        BotService botService = new BotService();
-
         String token = getToken();
         HubConnection hubConnection = buildHubConnection();
 
@@ -38,14 +40,13 @@ public class Main {
             hubConnection.stop().subscribe();
         }, UUID.class);
 
-
         hubConnection.on(HUB_REGISTERED, (id) -> {
             logger.info("Registered with the runner. Bot ID " + id);
             botService.setBotId(id);
         }, UUID.class);
 
         hubConnection.on(HUB_RECEIVED_GAME_STATE, (gameState) -> {
-            logger.info("Received Game State: " + gameState.toString());
+            logger.info("Received Game State: " + GSON.toJson(gameState));
             botService.setGameState(gameState);
         }, GameState.class);
 
@@ -64,8 +65,11 @@ public class Main {
             while (hubConnection.getConnectionState() == HubConnectionState.CONNECTED) {
                 Thread.sleep(GAME_LOOP_SLEEP_TIME);
 
-                botService.computeNextAction();
-                hubConnection.send(HUB_SEND_PLAYER_ACTION, botService.getPlayerCommand());
+                if (botService.shouldComputeNext()) {
+                    botService.computeNextAction();
+                    hubConnection.send(HUB_SEND_PLAYER_ACTION, botService.getPlayerCommand());
+                }
+
             }
         }).dispose();
 

@@ -1,13 +1,20 @@
 package models;
 
+import com.google.gson.annotations.SerializedName;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 public class PlayerCommand {
+    @SerializedName("PlayerId")
     private UUID playerID;
+
+    @SerializedName("Actions")
     private List<CommandAction> actions;
 
     public PlayerCommand() {
+        this.actions = new ArrayList<>();
     }
 
     public PlayerCommand(UUID playerID, List<CommandAction> actions) {

@@ -184,26 +184,4 @@ public class BotState {
         this.heat = heat;
     }
 
-    @Override
-    public String toString() {
-        return "BotState{" +
-                "id=" + id +
-                ", currentTierLevel=" + currentTierLevel +
-                ", tick=" + tick +
-                ", map=" + map +
-                ", population=" + population +
-                ", baseLocation=" + baseLocation +
-                ", travellingUnits=" + travellingUnits +
-                ", miningUnits=" + miningUnits +
-                ", lumberingUnits=" + lumberingUnits +
-                ", farmingUnits=" + farmingUnits +
-                ", scoutingUnits=" + scoutingUnits +
-                ", availableUnits=" + availableUnits +
-                ", seeds=" + seeds +
-                ", wood=" + wood +
-                ", food=" + food +
-                ", stone=" + stone +
-                ", heat=" + heat +
-                '}';
-    }
 }

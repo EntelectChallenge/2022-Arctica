@@ -30,11 +30,4 @@ public class Map {
         this.nodes = nodes;
     }
 
-    @Override
-    public String toString() {
-        return "Map{" +
-                "scoutTowers=" + scoutTowers +
-                ", nodes=" + nodes +
-                '}';
-    }
 }

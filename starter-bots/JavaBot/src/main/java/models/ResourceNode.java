@@ -1,11 +1,9 @@
 package models;
 
 import enums.GameObjectType;
-import enums.ResourceType;
 
 public class ResourceNode extends GameObject {
-    private ResourceType resourceType;
-    private int type;
+    private int type; // Connects to 'ResourceType'
     private int amount;
     private int maxUnits;
     private int currentUnits;
@@ -14,12 +12,11 @@ public class ResourceNode extends GameObject {
     private RegenerationRate regenerationRate;
 
     public ResourceNode() {
-        super(GameObjectType.RESOURCE_NODE);
+        super(GameObjectType.RESOURCE_NODE.getValue());
     }
 
-    public ResourceNode(ResourceType resourceType, int type, int amount, int maxUnits, int currentUnits, int reward, int workTime, RegenerationRate regenerationRate) {
-        super(GameObjectType.RESOURCE_NODE);
-        this.resourceType = resourceType;
+    public ResourceNode(int type, int amount, int maxUnits, int currentUnits, int reward, int workTime, RegenerationRate regenerationRate) {
+        super(GameObjectType.RESOURCE_NODE.getValue());
         this.type = type;
         this.amount = amount;
         this.maxUnits = maxUnits;
@@ -27,14 +24,6 @@ public class ResourceNode extends GameObject {
         this.reward = reward;
         this.workTime = workTime;
         this.regenerationRate = regenerationRate;
-    }
-
-    public ResourceType getResourceType() {
-        return resourceType;
-    }
-
-    public void setResourceType(ResourceType resourceType) {
-        this.resourceType = resourceType;
     }
 
     public int getType() {
@@ -93,17 +82,4 @@ public class ResourceNode extends GameObject {
         this.regenerationRate = regenerationRate;
     }
 
-    @Override
-    public String toString() {
-        return "ResourceNode{" +
-                "resourceType=" + resourceType +
-                ", type=" + type +
-                ", amount=" + amount +
-                ", maxUnits=" + maxUnits +
-                ", currentUnits=" + currentUnits +
-                ", reward=" + reward +
-                ", workTime=" + workTime +
-                ", regenerationRate=" + regenerationRate +
-                '}';
-    }
 }

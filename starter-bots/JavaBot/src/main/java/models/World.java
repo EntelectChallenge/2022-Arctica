@@ -38,12 +38,4 @@ public class World {
         this.map = map;
     }
 
-    @Override
-    public String toString() {
-        return "World{" +
-                "size=" + size +
-                ", currentTick=" + currentTick +
-                ", map=" + map +
-                '}';
-    }
 }

@@ -31,11 +31,4 @@ public class BotMapState {
         this.nodes = nodes;
     }
 
-    @Override
-    public String toString() {
-        return "BotMapState{" +
-                "scoutTowers=" + scoutTowers +
-                ", nodes=" + nodes +
-                '}';
-    }
 }

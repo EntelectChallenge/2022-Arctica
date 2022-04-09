@@ -1,28 +1,26 @@
 package models;
 
-import enums.ActionType;
-
 import java.util.UUID;
 
 public class CommandAction {
-    private ActionType type;
+    private int type; // Connects to 'ActionType'
     private int units;
     private UUID id;
 
     public CommandAction() {
     }
 
-    public CommandAction(ActionType type, int units, UUID id) {
+    public CommandAction(int type, int units, UUID id) {
         this.type = type;
         this.units = units;
         this.id = id;
     }
 
-    public ActionType getType() {
+    public int getType() {
         return type;
     }
 
-    public void setType(ActionType type) {
+    public void setType(int type) {
         this.type = type;
     }
 
