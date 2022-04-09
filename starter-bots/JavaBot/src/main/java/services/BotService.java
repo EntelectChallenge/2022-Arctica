@@ -62,7 +62,7 @@ public class BotService {
             logger.info("Farming action.");
             this.playerCommand.getActions().add(
                     new CommandAction(
-                            ActionType.FARM.getValue(),
+                            ActionType.FARM,
                             this.botState.getAvailableUnits(),
                             this.gameState.getWorld().getMap().getNodes().get(0).getId()
                     )
@@ -71,7 +71,7 @@ public class BotService {
             logger.info("scouting action");
             this.playerCommand.getActions().add(
                     new CommandAction(
-                            ActionType.SCOUT.getValue(),
+                            ActionType.SCOUT,
                             1,
                             this.gameState.getWorld().getMap().getScoutTowers().get(0).getId()
                     )

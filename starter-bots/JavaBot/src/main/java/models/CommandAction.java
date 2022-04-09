@@ -1,5 +1,7 @@
 package models;
 
+import enums.ActionType;
+
 import java.util.UUID;
 
 public class CommandAction {
@@ -10,8 +12,8 @@ public class CommandAction {
     public CommandAction() {
     }
 
-    public CommandAction(int type, int units, UUID id) {
-        this.type = type;
+    public CommandAction(ActionType type, int units, UUID id) {
+        this.type = type.getValue();
         this.units = units;
         this.id = id;
     }
