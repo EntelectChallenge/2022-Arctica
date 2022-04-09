@@ -8,7 +8,7 @@ services:
     networks:
       - network
     environment:
-      BOT_COUNT:  1
+      BOT_COUNT:  4
     ports:
       - "5000:5000"
   engine:
@@ -21,7 +21,7 @@ services:
     environment:
       RunnerIp: runner # Should be the Docker Compose service name used for the runner.
       LOG_LEVEL: info
-      BOT_COUNT: 1
+      BOT_COUNT: 4
     depends_on:
       - "runner"
       - "logger"
@@ -30,6 +30,8 @@ services:
       context: ../game-logger
       dockerfile: multi-stage.Dockerfile
     container_name: GameLogger
+    volumes:
+      - ./logs/:/home/fabio/Development/Entelect/2022/logs/
     networks:
       - network
     environment:
@@ -38,5 +40,47 @@ services:
       GAME_COMPLETE_FILE: gameComplete.log
     depends_on:
       - "runner"
+
+  ec_ref_bot1:
+    build: ../starter-bots/ReferenceBot
+    networks:
+      - network
+    environment:
+      RUNNER_IPV4: runner
+    depends_on:
+      - "runner"
+      - "engine"
+      - "logger"
+  ec_ref_bot2:
+    build: ../starter-bots/ReferenceBot
+    networks:
+      - network
+    environment:
+      RUNNER_IPV4: runner
+    depends_on:
+      - "runner"
+      - "engine"
+      - "logger"
+  ec_ref_bot3:
+    build: ../starter-bots/ReferenceBot
+    networks:
+      - network
+    environment:
+      RUNNER_IPV4: runner
+    depends_on:
+      - "runner"
+      - "engine"
+      - "logger"
+  ec_java_bot:
+    build: ../starter-bots/JavaBot
+    networks:
+      - network
+    environment:
+      RUNNER_IPV4: runner
+    depends_on:
+      - "runner"
+      - "engine"
+      - "logger"
+
 networks:
   network:

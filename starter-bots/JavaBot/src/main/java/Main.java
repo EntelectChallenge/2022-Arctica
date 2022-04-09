@@ -1,83 +1,90 @@
-import Enums.*;
-import Models.*;
-import Services.*;
 import com.microsoft.signalr.*;
+import models.GameState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import services.BotService;
 
 import java.util.*;
 
 public class Main {
 
+    // CHANGE THIS 'BOT_NAME' NAME TO YOUR OWN CUSTOM NAME !!!
+    private static final String BOT_NAME = "FreeBot";
+
+    // DO NOT CHANGE THESE SETTINGS BELOW !!!
+    // -----| BEGIN |-----
+    private static final String HUB_DISCONNECTED = "Disconnect";
+    private static final String HUB_REGISTERED = "Registered";
+    private static final String HUB_REGISTER = "Register";
+    private static final String HUB_RECEIVED_GAME_STATE = "ReceiveBotState";
+    private static final String HUB_SEND_PLAYER_ACTION = "SendPlayerCommand";
+    private static final String HUB_RECEIVE_GAME_COMPLETE = "ReceiveGameComplete";
+    private static final int HUB_SLEEP_TIME = 1000;
+    private static final int GAME_LOOP_SLEEP_TIME = 30;
+    // -----| END |-----
+
     public static void main(String[] args) throws Exception {
         Logger logger = LoggerFactory.getLogger(Main.class);
+
         BotService botService = new BotService();
-        String token = System.getenv("Token");
-        token = (token != null) ? token : UUID.randomUUID().toString();
 
-        String environmentIp = System.getenv("RUNNER_IPV4");
+        String token = getToken();
+        HubConnection hubConnection = buildHubConnection();
 
-        String ip = (environmentIp != null && !environmentIp.isBlank()) ? environmentIp : "localhost";
-        ip = ip.startsWith("http://") ? ip : "http://" + ip;
+        logger.info("Started with version " + 1);
 
-        String url = ip + ":" + "5000" + "/runnerhub";
-
-        HubConnection hubConnection = HubConnectionBuilder.create(url)
-                .build();
-
-        hubConnection.on("Disconnect", (id) -> {
-            System.out.println("Disconnected:");
-
-            hubConnection.stop();
+        hubConnection.on(HUB_DISCONNECTED, (id) -> {
+            logger.error("Disconnected from SignalR hub.");
+            hubConnection.stop().subscribe();
         }, UUID.class);
 
-        hubConnection.on("Registered", (id) -> {
-            System.out.println("Registered with the runner " + id);
 
-            Position position = new Position();
-            GameObject bot = new GameObject(id, 10, 20, 0, position, ObjectTypes.PLAYER);
-            botService.setBot(bot);
+        hubConnection.on(HUB_REGISTERED, (id) -> {
+            logger.info("Registered with the runner. Bot ID " + id);
+            botService.setBotId(id);
         }, UUID.class);
 
-        hubConnection.on("ReceiveGameState", (gameStateDto) -> {
-            GameState gameState = new GameState();
-            gameState.world = gameStateDto.getWorld();
-
-            for (Map.Entry<String, List<Integer>> objectEntry : gameStateDto.getGameObjects().entrySet()) {
-                gameState.getGameObjects().add(GameObject.FromStateList(UUID.fromString(objectEntry.getKey()), objectEntry.getValue()));
-            }
-
-            for (Map.Entry<String, List<Integer>> objectEntry : gameStateDto.getPlayerObjects().entrySet()) {
-                gameState.getPlayerGameObjects().add(GameObject.FromStateList(UUID.fromString(objectEntry.getKey()), objectEntry.getValue()));
-            }
-
+        hubConnection.on(HUB_RECEIVED_GAME_STATE, (gameState) -> {
+            logger.info("Received Game State: " + gameState.toString());
             botService.setGameState(gameState);
-        }, GameStateDto.class);
+        }, GameState.class);
+
+        hubConnection.on(HUB_RECEIVE_GAME_COMPLETE, (data) -> {
+            logger.info(data.toString());
+        }, Object.class);
 
         hubConnection.start().blockingAwait();
 
-        Thread.sleep(1000);
-        System.out.println("Registering with the runner...");
-        hubConnection.send("Register", token, "Coffee Bot");
+        Thread.sleep(HUB_SLEEP_TIME);
+        logger.info("Registering with the runner.");
+        hubConnection.send(HUB_REGISTER, token, BOT_NAME);
 
         //This is a blocking call
         hubConnection.start().subscribe(() -> {
             while (hubConnection.getConnectionState() == HubConnectionState.CONNECTED) {
-                Thread.sleep(20);
+                Thread.sleep(GAME_LOOP_SLEEP_TIME);
 
-                GameObject bot = botService.getBot();
-                if (bot == null) {
-                    continue;
-                }
-
-                botService.getPlayerAction().setPlayerId(bot.getId());
-                botService.computeNextPlayerAction(botService.getPlayerAction());
-                if (hubConnection.getConnectionState() == HubConnectionState.CONNECTED) {
-                    hubConnection.send("SendPlayerAction", botService.getPlayerAction());
-                }
+                botService.computeNextAction();
+                hubConnection.send(HUB_SEND_PLAYER_ACTION, botService.getPlayerCommand());
             }
-        });
+        }).dispose();
 
-        hubConnection.stop();
+        hubConnection.stop().subscribe();
+    }
+
+    static HubConnection buildHubConnection() {
+        String environmentIp = System.getenv("RUNNER_IPV4");
+        String ip = (environmentIp != null && !environmentIp.isBlank()) ? environmentIp : "localhost";
+        ip = ip.startsWith("http://") ? ip : "http://" + ip;
+        String url = ip + ":" + "5000" + "/runnerhub";
+
+        return HubConnectionBuilder.create(url)
+                .build();
+    }
+
+    static String getToken() {
+        String token = System.getenv("Token");
+        token = (token != null) ? token : UUID.randomUUID().toString();
+        return token;
     }
 }
