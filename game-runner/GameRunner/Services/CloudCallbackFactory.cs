@@ -60,7 +60,7 @@ namespace GameRunner.Services
                     MatchStatusReason = "Game Complete.",
                     Seed = JsonConvert.SerializeObject(runnerStateService.GameCompletePayload.WorldSeeds),
                     Ticks = runnerStateService.GameCompletePayload.TotalTicks.ToString(),
-                    Players =  new List<CloudPlayer>() //MakePlayerList()
+                    Players = MakePlayerList()
                 },
                 CloudCallbackType.LoggingComplete => new CloudCallback
                 {
