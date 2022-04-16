@@ -6,6 +6,7 @@ class ResouceTypes(enum.Enum):
     Food = 2
     Stone = 3
     Gold = 4
+    Heat = 5
 
     def __str__(self) -> str:
         return '%s' % self.name

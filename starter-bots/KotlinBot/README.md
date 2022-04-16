@@ -1,10 +1,18 @@
-# Kotlin Galaxio Bot
+# Kotlin Readme
 
 ## Running
 
-You can build the bot with `mvn clean package`. This will produce a jar file in the target directory with the name specified in the pom.xml file.
+You can build the bot with the command : 
+        
+        mvn clean package
+        
+This will produce a jar file in the target directory with the name specified in the pom.xml file.
 
-Once built you can run the bot with `java -jar KotlinBot.jar` from the target directory.
+Once built you can run the bot with command :
+
+        java -jar KotlinBot.jar
+    
+from the target directory.
 
 ## Testing
 

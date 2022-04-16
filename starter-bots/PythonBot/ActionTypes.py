@@ -1,5 +1,4 @@
 import enum
-from msilib.schema import Error 
   
 class ActionTypes(enum.Enum):
     Error = 0
@@ -7,6 +6,7 @@ class ActionTypes(enum.Enum):
     Mine = 2
     Farm = 3
     Lumber = 4
+    StarCampfire = 5
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '%s' % self.name

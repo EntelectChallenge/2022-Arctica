@@ -5,14 +5,6 @@ enum class ActionType(val value: Int) {
     SCOUT(1),
     MINE(2),
     FARM(3),
-    LUMBER(4);
-
-    override fun toString(): String {
-        return this.name
-    }
-
-    companion object {
-        fun getRandomActionType(): ActionType = values().random()
-
-    }
+    LUMBER(4),
+    START_CAMPFIRE(5);
 }

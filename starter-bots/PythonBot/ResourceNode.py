@@ -1,4 +1,5 @@
 from GameObject import GameObject
+
 class ResourceNode(GameObject):
     def __init__(self, guid, game_object_type, position, resource_type, amount, max_units, current_units, reward, work_time) -> None:
         super().__init__(guid, game_object_type, position)

@@ -1,6 +1,7 @@
 package arctica
 
 import arctica.service.BotService
+import arctica.service.model.GameComplete
 import arctica.service.model.PlayerCommand
 import arctica.service.model.dto.GameStateDto
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -44,7 +45,7 @@ object Main {
 
             hubConnection.on("ReceiveGameComplete", {
                 println("Game complete: $it")
-            }, String::class.java)
+            }, GameComplete::class.java)
 
             hubConnection.start().blockingAwait()
             println("Connection established with runner.")
@@ -54,7 +55,6 @@ object Main {
 
             while (!shouldQuit) {
                 Thread.sleep(20)
-
                 if (receiveUpdatedGameState) {
 
                     val action: PlayerCommand? = service?.computeNextPlayerAction()
@@ -67,7 +67,6 @@ object Main {
                     receiveUpdatedGameState = false
                 }
             }
-
             hubConnection.stop().blockingAwait(10, TimeUnit.SECONDS)
             println("Connection closed: ${hubConnection.connectionState}")
         }

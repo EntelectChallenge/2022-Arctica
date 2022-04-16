@@ -1,5 +1,5 @@
 class GameObjectDto:
-    def __init__(self, object_id, current_tier_level, tick, map_object, population, base_location, available_units, seed, wood, food, stone) -> None:
+    def __init__(self, object_id, current_tier_level, tick, map_object, population, base_location, available_units, seed, wood, food, stone, heat) -> None:
         self.object_id = object_id
         self.current_tier_level = current_tier_level
         self.tick = tick
@@ -11,3 +11,4 @@ class GameObjectDto:
         self.wood = wood
         self.food = food
         self.stone = stone
+        self.heat = heat

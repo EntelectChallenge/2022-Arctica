@@ -1,5 +1,6 @@
-Entelect Challenge c++ bot
+# C++ Readme
 
+## Installation
 Local configuration
 Install vcpkg & microsoft signalr client (Windows)
 - git clone https://github.com/microsoft/vcpkg ./vcpkg

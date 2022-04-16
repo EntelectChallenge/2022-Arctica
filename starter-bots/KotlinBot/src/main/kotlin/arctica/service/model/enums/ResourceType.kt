@@ -5,5 +5,6 @@ enum class ResourceType(val value: Int) {
     WOOD(1),
     FOOD(2),
     STONE(3),
-    GOLD(4)
+    GOLD(4),
+    HEAT(5)
 }

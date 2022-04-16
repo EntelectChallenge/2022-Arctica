@@ -4,7 +4,6 @@ Entelect StarterBot 2022 for Python3
 """
 import logging
 import os
-from telnetlib import GA
 import time
 import uuid
 from dotmap import DotMap
@@ -12,10 +11,6 @@ from signalrcore.hub_connection_builder import HubConnectionBuilder
 
 from BotService import BotService
 from Bot import Bot
-from GameObject import GameObject
-from GameObjects import GameObjects
-from ResourceTypes import ResouceTypes
-from Position import Position
 
 logging.basicConfig(filename='sample_python_bot.log', filemode='w', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -24,27 +19,27 @@ botService = BotService()
 hub_connected = False
 hub_connection = None
 
-def on_register(args):
+def on_register(args) -> None:
     bot = Bot()
     bot.set_bot_id(args[0])
     botService.set_bot(bot)
     print("Registered")
 
-def on_disconnect():
+def on_disconnect() -> None:
     print("Disconnected")
     global hub_connection
     hub_connection.close()
 
-def print_message(x):
+def print_message(x) -> None:
     print(x)
 
 
-def set_hub_connection(connected):
+def set_hub_connection(connected) -> None:
     global hub_connected
     hub_connected = connected
 
 
-def run_bot():
+def run_bot() -> None:
     environmentIp = os.getenv('RUNNER_IPV4', "http://localhost")
 
     environmentIp = environmentIp if environmentIp.startswith("http://") else "http://" + environmentIp
@@ -89,12 +84,11 @@ def run_bot():
     while hub_connected:
         continue
        
-
     hub_connection.stop()
 
-def get_next_player_action(data_list):
+def get_next_player_action(args) -> None: 
     try:
-        bot_state = DotMap(data_list[0])
+        bot_state = DotMap(args[0])
         player_command = botService.compute_next_player_command(bot_state)
         hub_connection.send("SendPlayerCommand", [player_command])
         print("Send Action to Runner")

@@ -86,36 +86,7 @@ namespace NETCoreBot.Services
         private void UpdateSelfState()
         {
             _bot = _gameState.Bots.FirstOrDefault(go => go.Id == _bot.Id);
-        }
-
-        private double GetDistanceBetween(GameObject location1, GameObject location2)
-        {
-            Position baseLocation = location1.Position;
-            Position nodeLocation = location2.Position;
-
-            double deltaX = baseLocation.X - nodeLocation.X;
-            double deltaY = baseLocation.Y - nodeLocation.Y;
-            var distanceSquared = (deltaX * deltaX) + (deltaY * deltaY);
-
-            double distance = Math.Sqrt(distanceSquared);
-
-            return distance;
-        }
-
-        private double GetDistanceBetweenBaseAndNode(Node node)
-        {
-
-            Position baseLocation = this._bot.BaseLocation;
-            Position nodeLocation = node.Position;
-
-            double deltaX = baseLocation.X - nodeLocation.X;
-            double deltaY = baseLocation.Y - nodeLocation.Y;
-            var distanceSquared = (deltaX * deltaX) + (deltaY * deltaY);
-
-            double distance = Math.Sqrt(distanceSquared);
-
-            return distance;
-        }
+        }      
 
     }
 }

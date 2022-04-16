@@ -37,8 +37,14 @@ class Bot():
     def lumber(self, units, node) -> None:
         self.__add_action(Action.lumber_action(units, node))
 
+    def start_campfire(self, units, node) -> None:
+        self.__add_action(Action.start_campfire_action(units, node))
+
     def get_command(self) -> PlayerCommand:
         return PlayerCommand(self.bot_id, self.actions)
 
-    def toJson(self):
+    def toJson(self) -> str:
         return json.dumps(self, default=lambda o: o.__dict__)
+
+    def __repr__(self) -> str:
+        return self.toJson()

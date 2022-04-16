@@ -22,7 +22,7 @@ data class BotDto(
     val seed: Int,
     val wood: Int,
     val food: Int,
-    val stone: Int
-// public int Gold { get; set; }
+    val stone: Int,
+    val heat: Int
 )
 
