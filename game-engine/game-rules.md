@@ -86,7 +86,7 @@ At the start of the game you will only have access to your base information and 
 
 Once you visit a scout tower, you will have access to the resource nodes surrounding the scout tower.
 
-![starting state](images\fig1.svg)
+![starting state](images/fig1.svg)
 ##### starting state
 
 ---
@@ -123,7 +123,7 @@ By scouting a specific tower, the bot retrieves the information from the scout t
 
 The image below illustrates the regions and their scout towers, for a map with 4 regions:
 
-![scout tower regions](images\scout-tower-regions.svg)
+![scout tower regions](images/scout-tower-regions.svg)
 
 Each scout tower is generated and placed randomly within their respective region.
 
