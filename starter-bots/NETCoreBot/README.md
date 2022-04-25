@@ -2,7 +2,7 @@
 
 ## Installation
 
-To run the .Net bot is requires _`.Net3`_ to run. This can be obtained from https://dotnet.microsoft.com/en-us/download/dotnet/3.1.
+To run the .Net bot is requires _`.Net6`_ to run. This can be obtained from https://dotnet.microsoft.com/en-us/download/dotnet/6.0.
 
 
 ## Running

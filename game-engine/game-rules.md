@@ -5,7 +5,7 @@
 ---
 **NB:
 The values provided within this readme are subject to change during balance phases.
-Entelect will endeavour to maintain this readme file. However the most accurate values can be found in appsettings.json within the game-engine folder.**
+Entelect will endeavour to maintain this readme file. However the most accurate values can be found in `appsettings.json` within the game-engine folder.**
 
 ---
 
@@ -44,8 +44,9 @@ Your goal is not only to survive but thrive in this winter landscape. To expand 
         - [Nodes](#nodes)
         - [Bots](#bots)
     - [The Commands](#the-commands)
-        - [All Commands](#all-commands)
         - [Command Structure](#command-structure)
+        - [All Commands](#all-commands)
+        - [Command stages](#command-stages)
         - [Command: SCOUT](#command-scout)
         - [Command: MINE](#command-mine)
         - [Command: FARM](#command-farm)
@@ -54,7 +55,7 @@ Your goal is not only to survive but thrive in this winter landscape. To expand 
     - [Inter tick calculations](#inter-tick-calculations)
       - [Travel time](#travel-time)
       - [population tiers](#population-tiers)
-      -[Population Growth/Decline Rate](#population-growthdecline-rate) 
+      - [Population Growth/Decline Rate](#population-growthdecline-rate) 
     - [Endgame](#endgame)
     - [Scoring](#scoring)
     - [The Math](#the-math)
@@ -141,7 +142,20 @@ These are locations where the player's units can harvest resources.
 
 Resource nodes have a **maximum unit capacity** i.e they do not allow more units past a certain point.
 
-Units from different bases can harvest resources on the same node. The distribution of resources is dependent on the  **number of units** for each base.
+Units from different bases can harvest resources on the same node. The distribution of resources is dependent on the **number of units** sent to harvest said resource from each base.
+
+Each node has a `reward` field (what each unit can carry). This value is set at random, within a given range. Referred to as the  `RewardRange`. This is dependent on the resource type. i.e :
+
+```
+"Stone": { 
+...
+    "RewardRange": [
+        1,
+        7
+      ],
+```   
+
+_**Note** please refer to the `appsettings.json` file under `ResourceGenerationConfig` in the `gameengine` project for all the resource values_
 
 Bots have access to how many units are currently available on a node, as well as the remaining resources on that node.
 
@@ -157,7 +171,7 @@ There are currently **three** kinds of resources:
 - Wood
 - Stone
 
-_for how these resources are used see **[Resources](#resources)**_
+_For how these resources are used see **[Resources](#resources)**_
 
 After using the **[scout](#command-scout)** command to increase visibility there will be three resource node types available to extract resources from
 
@@ -176,11 +190,13 @@ Limited resource supply. Use the **[mine](#command-mine)** command on your units
 
 #### Forest
 
-Limited resource supply. Use the **[lumber](#command-lumber)** command on your units to **chop wood** at this node
+Limited resource supply. Use the **[lumber](#command-lumber)** command on your units to **chop wood** at this node.
 
 ### Day night cycle
 
-At the end of **10 ticks** all bots enter the night cycle of the game. This is where
+At the end of **10 ticks** all bots enter the night cycle of the game. This is where your people choose to leave or stay based on how much food and warmth they have.
+
+_For more information see **[Population](#population-growthdecline-rate)**_
 
 ---
 ## Game Tick Payload
@@ -373,23 +389,16 @@ _Note: ids are used to determine the target node not the x, y value_
 Each unit can perform the five commands.
 
 ---
-### All Commands
-
-* SCOUT
-* FARM
-* MINE
-* LOG
-* START_CAMPFIRE
----
 ### Command Structure
 
 Commands can be sent to the engine as often as you like, but the engine does not wait for commands from the bots and processes the game state at a set rate.
 
-The Runner will only allow a maximum of one 'command' but many actions in a list per tick.
+The Runner will only allow a maximum of one 'command' **which contains a list of many `actions`**  per tick.
 
 Your commands will be lodged against your bot for processing during the next tick. These actions are processed under FIFO (First in, First out), meaning your earliest sent action is processed first. However, this list of actions should only ever be one command long.
 
 This means that your bot does not need to send a command each tick and can take as long as it wants to send each command. Feel free to run all the clever artificial intelligence you like! Just note that other bots might still be sending commands as there is no wait time.
+
 
 Example Payload in JSON with types:
 
@@ -411,6 +420,25 @@ Example Payload in JSON with types:
   ]
 } 
 ``` 
+---
+### All Commands
+
+* SCOUT
+* FARM
+* MINE
+* LOG
+* START_CAMPFIRE
+
+---
+### Command stages
+
+There are 4 stages in which a command you issue goes through, 
+
+- The command is issued
+- The unit(s) is/are in a traveling state to the node
+- The unit(s) is/are collecting resource(s)
+- the unit(s) is/are returned to base with the resource(s) - immediate 
+
 ---
 ### Command: SCOUT
 
@@ -514,7 +542,7 @@ For more information view the [distance calculation](#distance-calculation) sect
 
 ### Population tiers
 
-Each base has a tier level this. Determines the population growth rate of the base. This is calculated for every tick 
+Each base has a tier level this influences the population growth rate range of the base. This is calculated for every tick 
 
 eg
 ```
@@ -528,32 +556,28 @@ eg
 
 When population reaches the `maxPopulation` for their tier then the tier is increased
 
+_**Note** the tier levels range from 0-5. Navigate to the appsettings.json file, under the `PopulationTiers` heading, in the gameengine project for more details_
+
 ---
 ### Population Growth/Decline Rate
 
-The population will change depending on the amount of food harvested.
-This process happens every 10 ticks
+The population will change depending on the amount of food harvested and how warm they are. 
 
-if the population has a surplus of food the the population will increase based on the current tier level
+This process happens every 10 ticks.
 
-eg:
-```
-total population = 5
-tier level = 0
-increase factor = 1
-new total population = 6
-```
+_**Note** stone does play a factor in the final scoring but does not effect your population growth_
 
-if the population has less food then the amount of people
-then the population will decrease. by a 10%
+In order to sustain more people, you need a greater amount of food and warmth than what your current population requires to sustain itself. This will attract more people to your base. 
 
-eg:
-```
-total population = 100
-population decrease = 10
-remaining population = 90
-```
+_**Hint** population growth is determined by the lowest value between your excess warmth and food_
 
+Once the population has a surplus of **food and warmth**, the population will increase based on the current [tier level](#population-tiers).
+
+
+If the population has **less food or warmth** than the amount of people then the population cannot be sustained and will decrease based on the tier size
+
+
+_**Note** Visit GetPopulationChange() in the calculationService.cs in the gameEngine project for your math needs. We encourage you to dig into the code to get a better understanding on the logic._ 👆
 
 ---
 ## Endgame
@@ -581,6 +605,8 @@ This section is to explain the general math used for the movement and placement 
 
 The world uses the standard mathematical cartesian plane with the top left corner of the map being representative of the point (X=0, Y=0)
 
+_Visit the calculationService.cs in the gameEngine project for your math needs. We encourage you to dig into the code to get a better understanding on the logic._ 👆
+
 ---
 ### Distance Calculation
 Distance is calculated using the standard Pythagorean theorem, as seen below:
@@ -606,7 +632,8 @@ This formula can be used to calculate the distance between nodes in the world.
 
 ### Resource Distribution
 
-Each resource has a set `reward` field, this field effectively determines how many resources a single unit can carry back to base. When resource distribution is calculated the `NumberOfUnits` is multiplied by the `reward`.
+Each resource has a set `reward`(what each unit can carry back to base). Which is to say that: distribution is calculated the `NumberOfUnits` is multiplied by the `reward`. 
+
 i.e
 ```
 3 units, log lumber at node id: "123"

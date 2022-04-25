@@ -1,5 +1,5 @@
 # Base image provided by Entelect Challenge
-FROM public.ecr.aws/m5z5a5b2/languages/dotnetcore:2021
+FROM public.ecr.aws/m5z5a5b2/languages/dotnetcore:2022
 
 WORKDIR /app
 
