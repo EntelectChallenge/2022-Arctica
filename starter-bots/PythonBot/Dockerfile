@@ -3,7 +3,8 @@
 
 # Default Python image.
 # Base image is based on: python:3.9-alpine3.12
-FROM public.ecr.aws/m5z5a5b2/languages/python:2021
+# FROM public.ecr.aws/m5z5a5b2/languages/python:2021
+FROM public.ecr.aws/lambda/python:3.7.2022.04.22.17
 
 # Pytorch Python image.
 # Base image is based on: pytorch/pytorch:1.8.0-cuda11.1-cudnn8-runtime
