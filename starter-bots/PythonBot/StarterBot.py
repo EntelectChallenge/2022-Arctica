@@ -7,6 +7,7 @@ import os
 import time
 import uuid
 from dotmap import DotMap
+import json
 
 import asyncio
 from signalrcore_async.hub_connection_builder import HubConnectionBuilder
@@ -21,14 +22,14 @@ botService = BotService()
 hub_connected = False
 hub_connection = None
 
-def on_register(args) -> None:
+def on_register(args):
     bot = Bot()
     bot.set_bot_id(args[0])
     botService.set_bot(bot)
     set_hub_connection(True)
     print("Registered bot with Runner")
 
-def on_disconnect() -> None:
+def on_disconnect():
     #Clients should disconnect from the server when the server sends the request to do so.
     global hub_connection
     print("Disconnected:")    
@@ -58,10 +59,10 @@ async def run_bot() -> None:
     url = environmentIp + ":" + port + "/runnerhub"
 
     print(url)
-    global hub_connection
+    global hub_connection, hub_connected
     hub_connection = HubConnectionBuilder() \
         .with_url(url) \
-        .configure_logging(logging.DEBUG) \
+        .configure_logging(logging.INFO) \
         .with_automatic_reconnect({
         "type": "raw",
         "keep_alive_interval": 10,
@@ -73,9 +74,16 @@ async def run_bot() -> None:
         
         await hub_connection.start()  
         
-        hub_connection.on("Disconnect", on_disconnect)
+        hub_connection.on_open(lambda: (print("Connection opened and handshake received, ready to send messages"),
+                                    set_hub_connection(True)))
+        # hub_connection.on_error(lambda data: print(f"An exception was thrown closed: {data.error}"))
+        hub_connection.on_close(lambda: (print("Connection closed"),
+                                     set_hub_connection(False)))
+
         hub_connection.on("Registered", on_register)
         hub_connection.on("ReceiveBotState", get_next_player_action)
+        hub_connection.on("Disconnect", lambda data: (print("Disconnect Called"),(set_hub_connection(False))))
+        hub_connection.on("ReceiveGameComplete", lambda data: (print("Game complete"), (on_disconnect)))
         
         time.sleep(1)
         print("Registering with the runner...")
@@ -84,12 +92,16 @@ async def run_bot() -> None:
         await hub_connection.invoke("Register", [str(token), bot_nickname])
         
         time.sleep(5)
+        # print("Hub connected", hub_connected)
         while hub_connected:
-            time.sleep(1)
-            continue
+
+            await asyncio.sleep(0.01)
+            
     
     except Exception as e:
         print(e)
+
+     
     
     finally:
         
@@ -97,12 +109,14 @@ async def run_bot() -> None:
     
 
 
-def get_next_player_action(args) -> None: 
+def get_next_player_action(args): 
     #Get the current WorldState along with the last known state of the current client. 
+
     try:
         bot_state = DotMap(args[0])
         player_command = botService.compute_next_player_command(bot_state)
-        hub_connection.send("SendPlayerCommand", [player_command])
+        print(player_command)
+        hub_connection.send("SendPlayerCommand", str(player_command))
         print("Send Action to Runner")
     except Exception as e:
         print(e)
