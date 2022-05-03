@@ -7,7 +7,6 @@ import os
 import time
 import uuid
 from dotmap import DotMap
-import json
 
 import asyncio
 from signalrcore_async.hub_connection_builder import HubConnectionBuilder
@@ -94,8 +93,8 @@ async def run_bot() -> None:
         time.sleep(5)
         # print("Hub connected", hub_connected)
         while hub_connected:
-
-            await asyncio.sleep(0.01)
+            # await hub_connection.on("ReceiveBotState", get_next_player_action)
+            await asyncio.sleep(0.1)
             
     
     except Exception as e:
@@ -114,9 +113,11 @@ def get_next_player_action(args):
 
     try:
         bot_state = DotMap(args[0])
+        print("tick:", bot_state.world.currentTick)
         player_command = botService.compute_next_player_command(bot_state)
-        print(player_command)
-        hub_connection.send("SendPlayerCommand", str(player_command))
+        print(type(player_command),player_command)
+        hub_connection.send("SendPlayerCommand", [player_command["playerId"],player_command["actions"]])
+
         print("Send Action to Runner")
     except Exception as e:
         print(e)
