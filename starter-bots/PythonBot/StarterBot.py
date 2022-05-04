@@ -48,9 +48,6 @@ def set_hub_connection(connected) -> None:
     hub_connected = connected
 
 async def run_bot() -> None:
-    #get registrationToken
-    
-    print("Token:", token)
     #get environmentIp
     environmentIp = os.getenv('RUNNER_IPV4', "http://localhost") #default value hardcoded, not from appsettings file
     environmentIp = environmentIp if environmentIp.startswith("http://") else "http://" + environmentIp
@@ -92,13 +89,10 @@ async def run_bot() -> None:
         while hub_connected:
             # await hub_connection.on("ReceiveBotState", get_next_player_action)
             await asyncio.sleep(0.1)
-            
-    
+
     except Exception as e:
         print(e)
 
-     
-    
     finally:
         
         await hub_connection.stop()
@@ -110,9 +104,7 @@ def get_next_player_action(args):
 
     try:
         bot_state = DotMap(args[0])
-        print("tick:", bot_state.world.currentTick)
         player_command = botService.compute_next_player_command(bot_state)
-        # print(type(player_command),player_command)
         hub_connection.send("SendPlayerCommand", [player_command],str(token))
 
         print("Send Action to Runner")
