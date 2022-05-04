@@ -48,7 +48,7 @@ async def run_bot() -> None:
     #get registrationToken
     token = os.getenv("REGISTRATION_TOKEN")
     token = token if token is not None else uuid.uuid4()
-    
+    print("Token:", token)
     #get environmentIp
     environmentIp = os.getenv('RUNNER_IPV4', "http://localhost") #default value hardcoded, not from appsettings file
     environmentIp = environmentIp if environmentIp.startswith("http://") else "http://" + environmentIp
@@ -61,13 +61,8 @@ async def run_bot() -> None:
     global hub_connection, hub_connected
     hub_connection = HubConnectionBuilder() \
         .with_url(url) \
-        .configure_logging(logging.INFO) \
-        .with_automatic_reconnect({
-        "type": "raw",
-        "keep_alive_interval": 10,
-        "reconnect_interval": 5,
-        "max_attempts": 5
-    }).build()
+        .configure_logging(logging.DEBUG) \
+        .build()
         
     try:
         
@@ -115,8 +110,8 @@ def get_next_player_action(args):
         bot_state = DotMap(args[0])
         print("tick:", bot_state.world.currentTick)
         player_command = botService.compute_next_player_command(bot_state)
-        print(type(player_command),player_command)
-        hub_connection.send("SendPlayerCommand", [player_command["playerId"],player_command["actions"]])
+        # print(type(player_command),player_command)
+        hub_connection.send("SendPlayerCommand", [player_command])
 
         print("Send Action to Runner")
     except Exception as e:
