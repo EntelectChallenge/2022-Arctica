@@ -288,16 +288,17 @@ class BaseHubConnection(object):
         except Exception as ex:
             raise ex
 
-    def send(self, method, arguments):
+    def send(self, method, arguments,invocationId = 0):
         if type(arguments) is not list:
             raise HubConnectionError("Arguments of a message must be a list or subject")
 
         if type(arguments) is list:
-            self._internal_send(InvocationMessage(
+            message = InvocationMessage(
                 {},
-                0,
+                invocationId,
                 method,
-                arguments))
+                arguments)
+            self._internal_send(message)
 
         # if type(arguments) is Subject:
         #     arguments.connection = self
