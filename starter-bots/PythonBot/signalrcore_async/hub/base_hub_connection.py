@@ -266,7 +266,7 @@ class BaseHubConnection(object):
         if type(arguments) is list:
             invocation_id = str(uuid.uuid4())
             message = InvocationMessage({}, invocation_id, method, arguments)
-            return await self._internal_invoke(message)
+            return self._internal_invoke(message)
 
 
     async def _internal_invoke(self, message, protocol=None):
@@ -299,10 +299,10 @@ class BaseHubConnection(object):
                 method,
                 arguments))
 
-        if type(arguments) is Subject:
-            arguments.connection = self
-            arguments.target = method
-            arguments.start()
+        # if type(arguments) is Subject:
+        #     arguments.connection = self
+        #     arguments.target = method
+        #     arguments.start()
 
     def _internal_send(self, message, protocol=None):
 

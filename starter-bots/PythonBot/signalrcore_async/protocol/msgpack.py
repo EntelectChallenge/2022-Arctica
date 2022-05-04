@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime, timezone
 from enum import Enum
 
 import msgpack
@@ -57,9 +57,13 @@ class MessagePackHubProtocol(BaseHubProtocol):
 
             for i, argument in enumerate(message.arguments):
 
+                # date
+                if type(argument) is date:
+                    argument = datetime(argument.year, argument.month, argument.day, tzinfo=timezone.utc)
+
                 # date/time
                 if isinstance(argument, datetime):
-                    date_time = message.arguments[i]
+                    date_time = argument
                     timestamp = date_time.timestamp()
                     seconds = int(timestamp)
                     nanoseconds = int((timestamp - int(timestamp)) * 1e9)
@@ -67,7 +71,7 @@ class MessagePackHubProtocol(BaseHubProtocol):
 
                 # message type
                 elif isinstance(argument, Enum):
-                    message.arguments[i] = message.arguments[i].name
+                    message.arguments[i] = argument.name
 
         result = []
 

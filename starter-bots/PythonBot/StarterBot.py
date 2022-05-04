@@ -11,7 +11,7 @@ import json
 import traceback
 
 import asyncio
-from signalrcore_async_custom.hub_connection_builder import HubConnectionBuilder
+from signalrcore_async.hub_connection_builder import HubConnectionBuilder
 
 from BotService import BotService
 from Bot import Bot
@@ -50,7 +50,7 @@ async def run_bot() -> None:
     #get registrationToken
     token = os.getenv("REGISTRATION_TOKEN")
     token = token if token is not None else uuid.uuid4()
-    
+    print("Token: ",token)
     #get environmentIp
     environmentIp = os.getenv('RUNNER_IPV4', "http://localhost") #default value hardcoded, not from appsettings file
     environmentIp = environmentIp if environmentIp.startswith("http://") else "http://" + environmentIp
@@ -64,12 +64,7 @@ async def run_bot() -> None:
     hub_connection = HubConnectionBuilder() \
         .with_url(url) \
         .configure_logging(logging.DEBUG) \
-        .with_automatic_reconnect({
-        "type": "raw",
-        "keep_alive_interval": 10,
-        "reconnect_interval": 5,
-        "max_attempts": 5
-    }).build()
+        .build()
         
     try:
         
@@ -90,7 +85,7 @@ async def run_bot() -> None:
         print("Registering with the runner...")
         
         bot_nickname = "<example_bot_name>"
-        await hub_connection.invoke("Register", [str(token), bot_nickname])
+        await hub_connection.send("Register", [str(token),bot_nickname])
         
         time.sleep(5)
         # print("Hub connected", hub_connected)
@@ -118,7 +113,7 @@ def get_next_player_action(args):
         print("tick:", bot_state.world.currentTick)
         player_command = botService.compute_next_player_command(bot_state)
         # print(type(player_command),player_command)
-        hub_connection.invoke("SendPlayerCommand", [player_command])
+        hub_connection.send("SendPlayerCommand", [player_command])
 
 
         print("Send Action to Runner")

@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 from json import JSONEncoder
 
@@ -23,13 +23,17 @@ class MyEncoder(JSONEncoder):
 
             for i, argument in enumerate(o.arguments):
 
+                # date
+                if isinstance(argument, date):
+                    argument = datetime(argument.year, argument.month, argument.day)
+
                 # date/time
                 if isinstance(argument, datetime):
-                    o.arguments[i] = o.arguments[i].isoformat()
+                    o.arguments[i] = argument.isoformat()
 
                 # message type
                 elif isinstance(argument, Enum):
-                    o.arguments[i] = o.arguments[i].value
+                    o.arguments[i] = argument.value
 
         # prepare message
         result = o.__dict__
