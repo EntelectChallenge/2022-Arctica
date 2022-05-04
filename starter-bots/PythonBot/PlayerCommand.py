@@ -5,8 +5,11 @@ class PlayerCommand:
         self.playerId = player_id
         self.actions = actions
 
-    def toJson(self) -> str:
-        return json.dumps(self, default=lambda o: o.__dict__)
+    def toJson(self):
+        com = str(json.dumps(self, default=lambda o: o.__dict__))
+        return com
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return self.toJson()
+    
+    
