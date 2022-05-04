@@ -1,2 +1,2 @@
-signalrcore
+signalrcore_async
 dotmap
