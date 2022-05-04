@@ -24,7 +24,7 @@ class BotService:
             ActionTypes.Farm: self.bot.farm,
             ActionTypes.Mine: self.bot.mine,
             ActionTypes.Lumber: self.bot.lumber,
-            ActionTypes.StarCampfire: self.bot.start_campfire
+            ActionTypes.StarCampFire: self.bot.start_campfire,
         }
 
         switcher.get(move_type, None)(unit_amount, target_node.id)
