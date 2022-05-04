@@ -289,7 +289,7 @@ class BaseHubConnection(object):
             raise ex
 
     def send(self, method, arguments):
-        if type(arguments) is not list and type(arguments) is not Subject:
+        if type(arguments) is not list:
             raise HubConnectionError("Arguments of a message must be a list or subject")
 
         if type(arguments) is list:
@@ -299,10 +299,10 @@ class BaseHubConnection(object):
                 method,
                 arguments))
 
-        if type(arguments) is Subject:
-            arguments.connection = self
-            arguments.target = method
-            arguments.start()
+        # if type(arguments) is Subject:
+        #     arguments.connection = self
+        #     arguments.target = method
+        #     arguments.start()
 
     def _internal_send(self, message, protocol=None):
 
