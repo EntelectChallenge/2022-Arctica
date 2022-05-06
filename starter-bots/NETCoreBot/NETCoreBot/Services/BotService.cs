@@ -13,6 +13,7 @@ namespace NETCoreBot.Services
         private CommandAction _playerAction;
         private PlayerCommand _playerCommand;
         private GameState _gameState;
+        private EngineConfigDto _engineConfigDto;
 
         public BotService()
         {
@@ -20,6 +21,7 @@ namespace NETCoreBot.Services
             _playerCommand = new PlayerCommand();
             _gameState = new GameState();
             _bot = new BotDto();
+            _engineConfigDto = new EngineConfigDto();
         }
 
         public BotDto GetBot()
@@ -87,6 +89,16 @@ namespace NETCoreBot.Services
         {
             _bot = _gameState.Bots.FirstOrDefault(go => go.Id == _bot.Id);
         }      
+        
+        public EngineConfigDto GetEngineConfigDto()
+        {
+            return _engineConfigDto;
+        }
+
+        public void SetEngineConfigDto(EngineConfigDto engineConfigDto)
+        {
+            _engineConfigDto = engineConfigDto;
+        }
 
     }
 }

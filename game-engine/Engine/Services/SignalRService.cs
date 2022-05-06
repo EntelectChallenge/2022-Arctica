@@ -151,6 +151,8 @@ namespace Engine.Services
             var publishedState = worldStateService.GetPublishedState();
             connection.SendAsync("PublishGameState", publishedState);
 
+            connection.SendAsync("ReceiveConfigValues", engineConfig);
+            
             engineService.PendingStart = true;
             for (var i = 5; i > 1; i--)
             {

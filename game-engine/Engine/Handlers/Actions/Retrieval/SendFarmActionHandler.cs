@@ -4,6 +4,7 @@ using System.Linq;
 using Domain.Enums;
 using Domain.Models;
 using Domain.Services;
+using Engine.Extensions;
 using Engine.Handlers.Interfaces;
 using Engine.Interfaces;
 using Engine.Models;
@@ -39,10 +40,20 @@ namespace Engine.Handlers.Actions.Retrieval
 
             foreach (var playerAction in playerActions)
             {
-                double distributionFactor = calculationService.CalculateDistributionFactor(calculatedTotalAmount, totalUnitsAtResource);
+                var botPopulationTier = calculationService.GetBotPopulationTier(playerAction.Bot);
+
+                double distributionFactor =
+                    calculationService.CalculateDistributionFactor(calculatedTotalAmount, totalUnitsAtResource);
                 var foodDistributed = (int) Math.Round(playerAction.NumberOfUnits * distributionFactor);
-                Logger.LogInfo("Farm Action Handler", $"Bot {playerAction.Bot.Id} received {foodDistributed} amount of food");
+
+                var maxResourceDistributed = botPopulationTier.TierMaxResources.Food - playerAction.Bot.Food;
+                foodDistributed = foodDistributed.NeverMoreThan(maxResourceDistributed);
+
+                Logger.LogInfo("Farm Action Handler",
+                    $"Bot {playerAction.Bot.Id} received {foodDistributed} amount of food");
                 playerAction.Bot.Food += foodDistributed;
+                playerAction.Bot.Food = playerAction.Bot.Food.NeverMoreThan(botPopulationTier.TierMaxResources.Food);
+
                 resourceNode.Amount -= foodDistributed;
                 resourceNode.CurrentUnits -= playerAction.NumberOfUnits;
             }

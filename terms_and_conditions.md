@@ -19,7 +19,7 @@ The work of any other individual other than the participant.
 
 Although consultation with your peers is encouraged, team-based entries are not allowed and will be disqualified. 
 
-The semi-finals and finals will take place LIVE at Comic Con Africa in Johannesburg in September 2021. More info on Comic Con Africa can be found at https://www.comicconafrica.co.za. 
+The semi-finals and finals will take place LIVE at Comic Con Africa in Johannesburg in September 2022. More info on Comic Con Africa can be found at https://www.comicconafrica.co.za. 
 
 Finalists will receive free passes to Comic Con in Johannesburg and will be expected to attend. 
 
@@ -27,7 +27,7 @@ Any entry which exhibits behaviour that is deemed unfair, or violates the spirit
 
 The main competition is not open to employees of Entelect Software or their immediate families, however, there is a specific company challenge for staff. 
 
-The closing date of the challenge is 21th of September 2021. No further entries will be accepted after this time. 
+The closing date of the challenge is 21th of September 2022. No further entries will be accepted after this time. 
 
 By entering the competition, the winner agrees to follow all rules and requirements as outlined by Entelect Software. 
 

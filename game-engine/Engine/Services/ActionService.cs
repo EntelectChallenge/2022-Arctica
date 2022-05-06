@@ -51,9 +51,9 @@ namespace Engine.Services
             if (resourceNode != null && IsValid(playerAction, resourceNode.Type))
             {
                 var travelTime = calculationService.GetTravelTime(resourceNode, targetBot);
-                var tickDuration = calculationService.GetWorkTime(resourceNode, playerAction);
+                var workTime = calculationService.GetWorkTime(resourceNode, playerAction);
                 // Todo: does this still work with the resource workTime that has been added?
-                playerAction.SetStartAndEndTicks(worldStateService.GetCurrentTick(), travelTime, tickDuration);
+                playerAction.SetStartAndEndTicks(worldStateService.GetCurrentTick(), travelTime, workTime);
 
                 // Logger.LogInfo("ActionService", $"Bot: {botId}, Issued command: {playerAction.ActionType} in tick {worldStateService.GetCurrentTick()}, with {playerAction.NumberOfUnits} units to start at: {playerAction.StartTick}, and to end at: {playerAction.ExpectedCompletedTick}");
 

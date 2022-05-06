@@ -12,7 +12,8 @@ const resourceTypes = Object.freeze({
     Wood: 1,
     Food: 2,
     Stone: 3,
-    Gold: 4
+    Gold: 4,
+    Heat: 5
 });
 
 module.exports = {actionTypes, resourceTypes};

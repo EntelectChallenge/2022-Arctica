@@ -270,7 +270,7 @@ namespace Engine.Services
 
                 foreach (var playerAction in currentActions)
                 {
-                    if (playerAction.CheckActionComplete(worldStateService.GetCurrentTick()))
+                    if (playerAction.IsComplete(worldStateService.GetCurrentTick()))
                     {
                         actionsToComplete.Add(playerAction);
                     }

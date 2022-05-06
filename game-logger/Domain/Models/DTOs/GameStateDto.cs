@@ -14,5 +14,29 @@ namespace Domain.Models.DTOs
 
         public List<PopulationTier> PopulationTiers { get; set; }
 
+        public static GameStateDto GetStaticFields(GameStateDto gameStateDto)
+        {
+
+            return new GameStateDto
+            {
+                World = World.GetStaticFields(gameStateDto.World),
+                Bots = gameStateDto.Bots.ConvertAll(bot => BotDto.GetStaticFields(bot)),
+                BotId = gameStateDto.BotId
+            };
+        }
+        public static GameStateDto GetVariableFields(GameStateDto previousGSDto, GameStateDto currentGSDto)
+        {
+            var variableWorld = World.GetVariableFields(previousGSDto.World, currentGSDto.World);
+
+            return new GameStateDto
+            {
+                World = variableWorld,
+                Bots = currentGSDto.Bots.ConvertAll(bot => BotDto.GetVariableFields(
+                  previousGSDto.Bots.Find(x => x.Id == bot.Id), bot)),
+                BotId = currentGSDto.BotId
+            };
+        }
+
+
     }
 }

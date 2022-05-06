@@ -48,6 +48,13 @@ public class Main {
             botService.updateBotState(gameStateDto);
         }, GameStateDto.class);
 
+        hubConnection.on("ReceiveConfigValues", (engineConfig) -> {
+
+            botService.setEngineConfig(engineConfig);
+            System.out.println(botService.getEngineConfig().worldLength);
+        }, EngineConfigDto.class);
+
+
         hubConnection.start().blockingAwait();
 
         Thread.sleep(1000);

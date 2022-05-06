@@ -4,6 +4,7 @@ using System.Linq;
 using Domain.Enums;
 using Domain.Models;
 using Domain.Services;
+using Engine.Extensions;
 using Engine.Handlers.Interfaces;
 using Engine.Interfaces;
 using Engine.Models;
@@ -40,12 +41,19 @@ namespace Engine.Handlers.Actions.Retrieval
 
             foreach (var playerAction in playerActions)
             {
+                var botPopulationTier = calculationService.GetBotPopulationTier(playerAction.Bot);
+
                 double distributionFactor =
                     Convert.ToDouble(calculatedTotalAmount) / Convert.ToDouble(totalUnitsAtResource);
                 var stoneDistributed = (int) Math.Round(playerAction.NumberOfUnits * distributionFactor);
+
+                var maxResourceDistributed = botPopulationTier.TierMaxResources.Stone - playerAction.Bot.Stone;
+                stoneDistributed = stoneDistributed.NeverMoreThan(maxResourceDistributed);
+                
                 Logger.LogInfo("Miner Action Handler",
                     $"Bot {playerAction.Bot.Id} received {stoneDistributed} amount of stone");
                 playerAction.Bot.Stone += stoneDistributed;
+
                 resourceNode.Amount -= stoneDistributed;
                 resourceNode.CurrentUnits -= playerAction.NumberOfUnits;
             }

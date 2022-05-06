@@ -23,11 +23,11 @@ class Bot {
         this.id = id;
     }
 
-    setState = (botState) => {
-        // console.log("================================================================================================");
-        // console.log(JSON.stringify(botState, null, 4));        
-        // console.log("================================================================================================");
+    setBotEngineConfig = (engineConfig) => {
+        this.engineConfig = engineConfig;
+    }
 
+    setState = (botState) => {
         this.actions = [];
         const botDto = botState.bots.find(bot => bot.id === this.id);
 

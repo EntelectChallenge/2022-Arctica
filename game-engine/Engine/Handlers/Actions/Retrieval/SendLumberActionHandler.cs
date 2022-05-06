@@ -4,6 +4,7 @@ using System.Linq;
 using Domain.Enums;
 using Domain.Models;
 using Domain.Services;
+using Engine.Extensions;
 using Engine.Handlers.Interfaces;
 using Engine.Interfaces;
 using Engine.Models;
@@ -41,10 +42,17 @@ namespace Engine.Handlers.Actions.Retrieval
 
             foreach (var playerAction in playerActions)
             {
+                var botPopulationTier = calculationService.GetBotPopulationTier(playerAction.Bot);
+
                 double distributionFactor = calculationService.CalculateDistributionFactor(calculatedTotalAmount, totalUnitsAtResource);
                 var woodDistributed = (int) Math.Round(playerAction.NumberOfUnits * distributionFactor);
+                
+                var maxResourceDistributed = botPopulationTier.TierMaxResources.Wood - playerAction.Bot.Wood;
+                woodDistributed = woodDistributed.NeverMoreThan(maxResourceDistributed);
+                
                 Logger.LogInfo("Lumber Action Handler", $"Bot {playerAction.Bot.Id} received {woodDistributed} amount of wood");
                 playerAction.Bot.Wood += woodDistributed;
+
                 resourceNode.Amount -= woodDistributed;
                 resourceNode.CurrentUnits -= playerAction.NumberOfUnits;
             }

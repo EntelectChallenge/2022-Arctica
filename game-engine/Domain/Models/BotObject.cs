@@ -35,7 +35,7 @@ namespace Domain.Models
             .Where(x => x.ActionType == type && x.StartTick <= currentTick).Sum(x => x.NumberOfUnits);
 
         public int GetUnitsTravelling(int currentTick) =>
-            Actions.Where(x => x.StartTick > currentTick).Sum(x => x.NumberOfUnits);
+            Actions.Where(x => x.IsTravelling(currentTick)).Sum(x => x.NumberOfUnits);
 
         public int GetPopulation()
         {
@@ -105,11 +105,8 @@ namespace Domain.Models
             Food = Food,
             Stone = Stone,
             Heat =  Heat,
-            TravellingUnits = GetUnitsTravelling(gameState.World.CurrentTick),
-            FarmingUnits = GetUnitsInAction(ActionType.Farm, gameState.World.CurrentTick),
-            MiningUnits = GetUnitsInAction(ActionType.Mine, gameState.World.CurrentTick),
-            LumberingUnits = GetUnitsInAction(ActionType.Lumber, gameState.World.CurrentTick),
-            ScoutingUnits = GetUnitsInAction(ActionType.Scout, gameState.World.CurrentTick),               
+            PendingActions = PendingActions.Select(action => action.ToStateObject()).ToList(),
+            Actions = Actions.Select(action => action.ToStateObject()).ToList()
             // Gold = Gold,  
         };
 

@@ -87,7 +87,7 @@ namespace Engine.Services
             var populationChangeMax = populationTier.PopulationChangeFactorRange[1];
             Logger.LogInfo("Calculation Service", $"Min Resource surplus {minResourceSurplus}");
 
-            minResourceSurplus.NeverLessThan(populationRangeMin).NeverMoreThan(populationRangeMax);
+            minResourceSurplus = minResourceSurplus.NeverLessThan(populationRangeMin).NeverMoreThan(populationRangeMax);
 
             var populationChangeFactor =
                 (minResourceSurplus - populationRangeMin) * (populationChangeMax - populationChangeMin) /

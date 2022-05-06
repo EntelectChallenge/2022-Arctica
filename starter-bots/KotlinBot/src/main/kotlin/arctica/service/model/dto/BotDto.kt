@@ -1,5 +1,6 @@
 ﻿import arctica.service.model.Position
 import arctica.service.model.BotMapState
+import arctica.service.model.dto.PlayerActionDto
 import java.util.*
 
 /**
@@ -13,11 +14,13 @@ data class BotDto(
     val map: BotMapState,
     val population: Int,
     val baseLocation: Position,
-    val travellingUnits: Int,
+    val PendingActions: List<PlayerActionDto>,
+    val Actions: List<PlayerActionDto>,
+/*    val farmingUnits: Int,
     val lumberingUnits: Int,
     val miningUnits: Int,
     val farmingUnits: Int,
-    val scoutingUnits: Int,
+    val farmingUnits: Int,*/
     val availableUnits: Int,
     val seed: Int,
     val wood: Int,

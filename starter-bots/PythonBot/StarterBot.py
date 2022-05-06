@@ -33,11 +33,12 @@ def on_disconnect() -> None:
 def print_message(x) -> None:
     print(x)
 
+def on_receive_config(args) -> None:
+    botService.set_engine_config(args)
 
 def set_hub_connection(connected) -> None:
     global hub_connected
     hub_connected = connected
-
 
 def run_bot() -> None:
     environmentIp = os.getenv('RUNNER_IPV4', "http://localhost")
@@ -68,6 +69,7 @@ def run_bot() -> None:
     hub_connection.on("ReceiveBotState", get_next_player_action)
     hub_connection.on("Disconnect", lambda data: (print("Disconnect Called"),(set_hub_connection(False))))
     hub_connection.on("ReceiveGameComplete", lambda data: (print("Game complete"), (on_disconnect)))
+    hub_connection.on("ReceiveConfigValues", on_receive_config)
 
     hub_connection.start()
     time.sleep(1)

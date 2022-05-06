@@ -12,6 +12,8 @@ public class BotService {
     BotDto bot = new BotDto();
     GameStateDto gameState = new GameStateDto();
 
+    EngineConfigDto engineConfig = new EngineConfigDto();
+
     Boolean shouldQuite = false;
     Boolean receivedBotState = false;
 
@@ -53,6 +55,14 @@ public class BotService {
     public void updateBotState(GameStateDto gameState) {
         this.gameState = gameState;
         this.bot = gameState.getBotByID(bot.getId());
+    }
+
+    public EngineConfigDto getEngineConfig() {
+        return engineConfig;
+    }
+
+    public void setEngineConfig(EngineConfigDto engineConfig) {
+        this.engineConfig = engineConfig;
     }
 
 //    private ScoutTower findNearestScoutTower(Position baseLocation,List<ScoutTower> scoutTowers ){

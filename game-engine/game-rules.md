@@ -62,6 +62,7 @@ Your goal is not only to survive but thrive in this winter landscape. To expand 
         - [Resource Distribution](#resource-distribution)
         - [Distance Calculation](#distance-calculation)
         - [Rounding](#rounding)
+    -  [Logging](#logging)     
 
 ---
 ## The Map
@@ -201,6 +202,73 @@ _For more information see **[Population](#population-growthdecline-rate)**_
 ---
 ## Game Tick Payload
 
+### Engine config
+
+In `tick 0` your bot will receive the full `engineConfig` file. The enginge config is collection of all the important values that the game engine uses. Below is an example of the game engine
+
+_note: for the complele and up to date values, please refer to the `appsettings.json` file in the `gameengine`_
+
+```jsonc
+
+  "RunnerUrl": "http://localhost",
+  "RunnerPort": "5000",
+  "BotCount": 4,
+  "TickRate": 250,     // amount of time between ticks 
+  "StartingUnits": 2,  /
+  "StartingFood": 10,
+  "RegionSize": 10,
+  "BaseZoneSize": 10,
+  "ProcessTick": 10,
+  "NumberOfRegionsInMapLength": 4,
+  "ScoutWorkTime": 2,
+  "MaxTicks": 2500,  // amount of ticks per round  
+  "WorldSeed": 52323, 
+  "MinimumPopulation": 4,
+  "PopulationTiers": [
+    {
+      "level": 0,
+      "name": "Tier 0",
+      "maxPopulation": 50,
+      "populationChangeFactorRange": [
+        -0.05,
+        0.05
+      ],
+      "tierResourceConstraints": {
+        "food": 0,
+        "wood": 0,
+        "stone": 0
+      },
+      "tierMaxResources": {
+        "food": 333,
+        "wood": 500,
+        "stone": 35
+      }
+    },
+    {
+      "level": 1,
+      "name": "Tier 1",
+      "maxPopulation": 273,
+      "tierResourceConstraints": {
+        "food": 78,
+        "wood": 50,
+        "stone": 2
+      },
+      "tierMaxResources": {
+        "food": 1675,
+        "wood": 2513,
+        "stone": 168
+      },
+      "populationChangeFactorRange": [
+        -0.05,
+        0.05
+      ]
+    }, ...
+}
+```
+
+---
+### State
+
 All players will receive the state of the world, all game objects and all player objects at the start of each tick. The payload of each game tick will contain the following information:
 
 ```jsonc
@@ -297,11 +365,23 @@ All players will receive the state of the world, all game objects and all player
                 "x": 30,
                 "y": 30
             },
-            "travellingUnits": 1,
-            "lumberingUnits": 0,
-            "miningUnits": 0,
-            "farmingUnits": 0,
-            "scoutingUnits": 0,
+            "pendingActions" : [{
+              "targetNodeId" : "1e253509-e3a7-4550-850e-dcfaebea96eb",
+              "numberOfUnits" : 1,
+              "tickActionCompleted" : 2460,
+              "tickActionStart" : 2458,
+              "tickReceived" : 2442,
+              "actionType" : 1
+            } ],
+            "actions" : [ {
+              "targetNodeId" : "99afa6c1-59af-4eae-a88a-2ea570d3ac51",
+              "numberOfUnits" : 1,
+              "tickActionCompleted" : 2453,
+              "tickActionStart" : 2445,
+              "tickReceived" : 2442,
+              "actionType" : 3
+            } //...
+            ],
             "availableUnits": 1,
             "seed": 13123,
             "wood": 815,
@@ -363,11 +443,20 @@ The `bots` list contains all player bases on the map _will be reviled after scou
   * `nodes` - nodes ids that the player has revealed by the scouting action
 * `population`- current total population
 * `baseLocation`- ( x, y ) location of the base
-* `travellingUnits` - amount of units currently ***travelling*** to their destination node
-* `lumberingUnits` - amount of units currently **logging wood**
-* `miningUnits` - amount of units currently **mining**
-* `farmingUnits` - amount of units currently **farming**
-* `scoutingUnits` - amount of units currently **scouting**
+* `pendingActions` - contains the list of actions in pending
+  * `targetNodeId` - node where the action is taking place
+  * `numberOfUnits` - number of units performing the action
+  * `tickActionCompleted` - tick when the action is completed 
+  * `tickActionStart` - tick where the action will be proccesed 
+  * `tickReceived` - the tick that the action was received  
+  * `actionType` - the type of action to be conducted
+* `actions` - actions that are currently 
+  * `targetNodeId` - same as above
+  * `numberOfUnits` - same as above
+  * `tickActionCompleted` - same as above 
+  * `tickActionStart` - same as above 
+  * `tickReceived` - same as above  
+  * `actionType` - same as above
 * `availableUnits` - amount of units idle
 * `seed` - seed of the map
 * `wood` - amount of wood reserved
@@ -556,10 +645,10 @@ eg
 
 When population reaches the `maxPopulation` for their tier then the tier is increased
 
-_**Note** the tier levels range from 0-5. Navigate to the appsettings.json file, under the `PopulationTiers` heading, in the gameengine project for more details_
+_**Note** the tier levels range from 0-8. Navigate to the appsettings.json file, under the `PopulationTiers` heading, in the gameengine project for more details_
 
 ---
-### Population Growth/Decline Rate
+## Population Growth/Decline Rate
 
 The population will change depending on the amount of food harvested and how warm they are. 
 
@@ -673,5 +762,15 @@ Note when doing rounding calculations in your own bot check the rules of the spe
 No language will have a advantage as only integer values are used in commands and the engine calculates all bot commands in the same way.
 This section is for reference to check that your bot calculations and decision points align with how the engine works.
 
+
+---
+
+Logging
+
+The logger is used to keep an auit trail of the game state. From each tick there is a verbose log and a condenced logs this can be toggled in the `appsettings.json` file in the `gameLogger` 
+
+  `"CondencedLoggingToggle":  "true"`
+
+it is toggled on by default.  
 
 ---

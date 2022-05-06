@@ -1,5 +1,6 @@
 from Bot import Bot
 from ActionTypes import ActionTypes
+from EngineConfigDto import EngineConfigDto
 import random
 
 class BotService:
@@ -7,6 +8,7 @@ class BotService:
         self.bot = Bot()
         self.playerAction = playerAction
         self.gameState = gameState
+        self.engine_config = EngineConfigDto()
 
     def add_random_action(self):
         if(len(self.bot.my_nodes) == 0):
@@ -39,3 +41,6 @@ class BotService:
 
     def set_bot(self, args):
         self.bot = args
+
+    def set_engine_config(self, configs):
+        self.engine_config = configs

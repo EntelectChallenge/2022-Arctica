@@ -31,6 +31,7 @@ function registerBot(bot) {
         console.log("Registered with the runner with Id: " + id);
         bot.setBotId(id);
     });
+    registerReceiveConfigValues(bot);
 }
 
 function registerPlayerCommandMethod(getPlayerCommand){
@@ -40,6 +41,13 @@ function registerPlayerCommandMethod(getPlayerCommand){
             connection.invoke("SendPlayerCommand", playerCommand)
         }
     });
+}
+
+function registerReceiveConfigValues(bot){
+    connection.on("ReceiveConfigValues", configValues => {
+        bot.setConfigValues(configValues);
+        console.log('Received config values ' + JSON.stringify(configValues, null, 4))
+    })
 }
 
 connection.on("Disconnect", (id) => onDisconnect());

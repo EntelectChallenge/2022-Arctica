@@ -1,5 +1,5 @@
 const signalR = require("@microsoft/signalr");
-const {createGuid} = require('./index')
+const { createGuid } = require('./index')
 
 const token = process.env["REGISTRATION_TOKEN"] ?? createGuid();
 
@@ -33,7 +33,7 @@ function registerBot(bot) {
     });
 }
 
-function registerPlayerCommandMethod(getPlayerCommand){
+function registerPlayerCommandMethod(getPlayerCommand) {
     connection.on("ReceiveBotState", botState => {
         const playerCommand = getPlayerCommand(botState);
         connection.invoke("SendPlayerCommand", playerCommand)
@@ -47,4 +47,11 @@ connection.on("ReceiveGameComplete", (winningBot) => {
     onDisconnect();
 });
 
-module.exports = {start, registerBot, registerPlayerCommandMethod};
+function retrieveEngineConfig(bot) {
+    connection.on("ReceiveConfigValues", configValues => {
+        console.log("Received config values from game engine");
+        bot.setBotEngineConfig(configValues);
+    });
+}
+
+module.exports = { start, registerBot, registerPlayerCommandMethod, retrieveEngineConfig };

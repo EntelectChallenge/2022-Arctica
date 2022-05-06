@@ -1,8 +1,7 @@
 package arctica
 
 import arctica.service.BotService
-import arctica.service.model.GameComplete
-import arctica.service.model.PlayerCommand
+import arctica.service.model.*
 import arctica.service.model.dto.GameStateDto
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.signalr.HubConnectionBuilder
@@ -31,6 +30,25 @@ object Main {
                 service = BotService()
                 println("Registered with the runner $id.")
             }, UUID::class.java)
+
+            /**
+            === Receive any config value ===
+             */
+
+            var worldArea: Int
+            var seed: Seeds
+            var resourceImportance: ResourceImportance
+
+            hubConnection.on("ReceiveConfigValues", {
+
+                println(it)
+
+                worldArea = it.worldArea
+                seed = it.seeds
+                resourceImportance = it.resourceImportance
+
+            }, EngineConfigDto::class.java)
+
 
             /**
             === Receive the state of the bot ===

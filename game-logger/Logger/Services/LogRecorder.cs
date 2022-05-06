@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -19,7 +18,6 @@ using Logger.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using Domain.Enums;
 using System.Linq;
 
 namespace Logger.Services
@@ -168,7 +166,7 @@ namespace Logger.Services
             using var httpClient = new HttpClient();
             try
             {
-                var connectionInformation = new ConnectionInformation{Reason = "Logger was disconnected due to failed signalR connection", Status = ConnectionStatus.Disconnected};
+                var connectionInformation = new ConnectionInformation { Reason = "Logger was disconnected due to failed signalR connection", Status = ConnectionStatus.Disconnected };
                 var content = new StringContent(JsonConvert.SerializeObject(connectionInformation), Encoding.UTF8, "application/json");
                 var result = await httpClient.PostAsync($"{runnerUrl}/api/connections/logger", content);
                 if (result.StatusCode != HttpStatusCode.OK)
@@ -193,12 +191,33 @@ namespace Logger.Services
             //Console.WriteLine(JsonConvert.SerializeObject(gameStateDto, Formatting.Indented));
 
             LogWriter.LogInfo("Logger", $"Tick: {gameStateDto.World.CurrentTick}, Adding to game state log");
+
+            // add to the static dto before this point/ or filter out all static values
             gameStateDtoLog.Add(gameStateDto);
             if (!verboseLogging)
             {
                 return;
             }
-            
+
+            var filePath = WriteFileWithSerialisation(
+                $"{gameStateDto.World.CurrentTick}_DTO_{loggerConfig.GameStateLogFileName}",
+                logDirectory,
+                gameStateDtoLog.ToArray());
+        }
+
+
+        private async Task OnWriteStaticStateLog(GameStateDto gameStateDto)
+        {
+
+            //Console.WriteLine(JsonConvert.SerializeObject(gameStateDto, Formatting.Indented));
+
+            LogWriter.LogInfo("Logger", $"Tick: {gameStateDto.World.CurrentTick}, Adding to static state log");
+            gameStateDtoLog.Add(gameStateDto);
+            if (!verboseLogging)
+            {
+                return;
+            }
+
             var filePath = WriteFileWithSerialisation(
                 $"{gameStateDto.World.CurrentTick}_DTO_{loggerConfig.GameStateLogFileName}",
                 logDirectory,
@@ -248,8 +267,11 @@ namespace Logger.Services
             {
                 return;
             }
+
             logsSaving = true;
+
             LogWriter.LogInfo("Logger", "Game Complete. Saving Logs...");
+
             var finalLogDir = logDirectory;
 
             if (pushLogsToS3)
@@ -257,34 +279,54 @@ namespace Logger.Services
                 finalLogDir = $"{logDirectory}/logs";
                 var finalLogDirDetails = Directory.CreateDirectory(finalLogDir);
             }
-             
+
             LogWriter.LogInfo("Logger", $"Saving Files into Directory: {finalLogDir}, Current Directory: {Directory.GetCurrentDirectory()}");
 
             string gameExceptionFilePath = null;
             if (gameExceptionLog.Count > 0)
             {
                 LogWriter.LogInfo("Logger", "Game Exception Log");
-                gameExceptionFilePath = WriteFileWithSerialisation(
-                    loggerConfig.GameExceptionLogFileName,
+                gameExceptionFilePath = WriteFileWithSerialisation(loggerConfig.GameExceptionLogFileName,
                     finalLogDir,
                     gameExceptionLog.ToArray());
             }
 
             var logTime = $"{DateTime.Now:yyyy-MM-dd_hh-mm-ss}";
 
+            //Log game state
             var stateFileName = matchStatusFileName ?? $"{loggerConfig.GameStateLogFileName}_{logTime}";
-            var gameStateFilePath = WriteFileWithSerialisation(
-                stateFileName,
+            var condencedLofFileName = matchStatusFileName ?? $"GameStateCondencedLog_{logTime}";
+
+            WriteFileWithSerialisation(
+                condencedLofFileName,
                 finalLogDir,
-                FinalGameLog());
-            var gameCompleteFilePath = WriteFileWithSerialisation(
+                loggerConfig.CondencedLoggingToggle ? VariableGameLog() : FinalGameLog());
+
+            if (loggerConfig.CondencedLoggingToggle)
+            {
+                //Log static state
+                var staticStateFileName = matchStatusFileName ?? $"{loggerConfig.GameStateStaticLogFileName}_{logTime}";
+
+                WriteFileWithSerialisation(
+                    staticStateFileName,
+                    finalLogDir,
+                    StaticGameLog());
+            }
+
+
+
+            //Log game complete
+            WriteFileWithSerialisation(
                 $"{gameCompleteFileName ?? $"{loggerConfig.GameStateLogFileName}_{logTime}_GameComplete"}",
                 finalLogDir,
                 gameCompletePayload);
 
+
             LogWriter.LogInfo("Logger", "Logs Saved Successfully");
+
             LogWriter.LogInfo("Logger", $"Log Directory: {logDirectory}, Current Directory: {Directory.GetCurrentDirectory()}");
 
+            // Push to aws
             if (pushLogsToS3)
             {
                 try
@@ -328,7 +370,7 @@ namespace Logger.Services
         {
             List<object> logList = new List<object>();
 
-            foreach(var log in gameStateDtoLog)
+            foreach (var log in gameStateDtoLog)
             {
                 logList.Add(log);
 
@@ -338,6 +380,32 @@ namespace Logger.Services
             }
 
             return logList;
+        }
+        private object StaticGameLog()
+        {
+            List<object> staticLogList = new List<object>();
+
+            staticLogList.Add(GameStateDto.GetStaticFields(gameStateDtoLog.First()));
+
+            return staticLogList;
+        }
+
+        private object VariableGameLog()
+        {
+            List<object> variableLogList = new List<object>();
+
+            for (int i = 1; i < gameStateDtoLog.Count; i++)
+            {
+                GameStateDto variableLog = GameStateDto.GetVariableFields(gameStateDtoLog[dec(i)], gameStateDtoLog[i]);
+                variableLogList.Add(variableLog);
+            }
+
+            return variableLogList;
+        }
+
+        private int dec(int i)
+        {
+            return i -= 1;
         }
 
         private string WriteFileWithSerialisation(
@@ -352,7 +420,10 @@ namespace Logger.Services
             try
             {
                 using var file = File.CreateText(path);
-                var serializer = new JsonSerializer();
+                var serializer = new JsonSerializer
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                };
                 try
                 {
                     serializer.Serialize(file, objToSerialise);

@@ -17,11 +17,13 @@ namespace Domain.Models.DTOs
         public BotMapState Map { get; set; }
         public int Population { get; set; }
         public Position BaseLocation { get; set; }
-        public int TravellingUnits { get; set; }
-        public int LumberingUnits { get; set; }
-        public int MiningUnits { get; set; }
-        public int FarmingUnits { get; set; }
-        public int ScoutingUnits { get; set; }
+        public List<PlayerActionDto> PendingActions { get; set; }
+        public List<PlayerActionDto> Actions { get; set; }
+        // public int TravellingUnits { get; set; }
+        // public int LumberingUnits { get; set; }
+        // public int MiningUnits { get; set; }
+        // public int FarmingUnits { get; set; }
+        // public int ScoutingUnits { get; set; }
         public int AvailableUnits { get; set; }
         public int Seed { get; set; }
         public int Wood { get; set; }

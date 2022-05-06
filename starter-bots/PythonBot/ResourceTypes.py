@@ -1,6 +1,6 @@
 import enum 
   
-class ResouceTypes(enum.Enum):
+class ResourceTypes(enum.Enum):
     Error = 0
     Wood = 1
     Food = 2

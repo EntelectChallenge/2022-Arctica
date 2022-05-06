@@ -12,7 +12,6 @@ namespace Domain.Models
         private List<PlayerAction> PendingActions { get; set; }
         public Map Map { get; set; }
         public int AvailableUnits { get; set; }
-        
         public int Score { get; set; }
         public int Placement { get; set; }
         public int Seed { get; set; }

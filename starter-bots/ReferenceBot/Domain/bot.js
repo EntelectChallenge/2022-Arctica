@@ -2,6 +2,8 @@
 
 class Bot {
     constructor() {
+        this.configValues= {}
+        
         this.myNodes = [];
         this.myScoutTowers = [];
         this.actions = [];
@@ -48,6 +50,10 @@ class Bot {
         this.stone = botDto.stone;
         this.wood = botDto.wood;
         this.heat = botDto.heat;
+    }
+    
+    setConfigValues = (configValues) => {
+        this.configValues = configValues;
     }
 
     // TODO: Check action type against resource type because you cant mine wood?

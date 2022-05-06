@@ -6,6 +6,7 @@ using System.Timers;
 using Domain.Models;
 using Domain.Models.DTOs;
 using Domain.Services;
+using Engine.Models;
 using GameRunner.Enums;
 using GameRunner.Interfaces;
 using GameRunner.Models;
@@ -256,6 +257,19 @@ namespace GameRunner
             if (logger != default)
             {
                 await logger.Client.SendAsync("WriteExceptionLog", gameException);
+            }
+        }
+
+        /// <summary>
+        ///     Distributes the config values from the game engine to the bots
+        /// </summary>
+        /// <returns></returns>
+        public async Task ReceiveConfigValues(EngineConfig config)
+        {
+            // send to the bot that requested 
+            foreach (var (botId, connectionId) in runnerStateService.GetActiveConnections())
+            {
+                await Clients.Client(connectionId).SendAsync("ReceiveConfigValues", config);
             }
         }
 
