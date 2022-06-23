@@ -7,6 +7,8 @@
         Mine = 2,
         Farm = 3,
         Lumber = 4,
-        StartCampfire = 5
+        StartCampfire = 5,
+        //Buldings:
+        Quarry = 6
     }
 }

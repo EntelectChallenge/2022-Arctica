@@ -7,6 +7,7 @@ namespace Domain.Models
         Food,
         Stone,
         Gold,
-        Heat
+        Heat,
+        Available 
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Domain.Configs;
 using Domain.Enums;
 using Domain.Models;
 using Domain.Models.DTOs;
@@ -8,6 +9,8 @@ using Domain.Services;
 using Engine.Interfaces;
 using Engine.Models;
 using Newtonsoft.Json;
+using BuildingObject = Domain.Models.BuildingObject;
+using BuildingConfig = Domain.Configs.Building;
 
 namespace Engine.Services
 {
@@ -20,6 +23,7 @@ namespace Engine.Services
         private readonly ISet<Position> farmPositionsInUse = new HashSet<Position>();
         private readonly ISet<Position> woodPositionsInUse = new HashSet<Position>();
         private readonly ISet<Position> stonePositionsInUse = new HashSet<Position>();
+        private readonly ISet<Position> goldPositionsInUse = new HashSet<Position>();
         private readonly ISet<Position> scoutTowersPositionsInUse = new HashSet<Position>();
 
         private readonly GameState state = new()
@@ -73,7 +77,16 @@ namespace Engine.Services
 
         public BotObject GetBotById(Guid botId)
         {
-            return state.Bots.Find(c => c.Id == botId);
+            return state.Bots.Find(c => c.BotId == botId);
+        }
+
+        public ISet<Position> GetPositionsInUse()
+        {
+            return positionsInUse;
+        }
+        public void AddPositionInUse(Position position)
+        {
+            positionsInUse.Add(position);
         }
 
         public void AddBotObject(BotObject bot)
@@ -101,23 +114,92 @@ namespace Engine.Services
             return state;
         }
 
+        public void RemoveAvailableNode(Guid availableNodeId)
+        {
+            AvailableNode availableNode = state.World.Map.AvailableNodes.FirstOrDefault(n => n.Id == availableNodeId);
+
+            state.World.Map.AvailableNodes.Remove(availableNode);
+        }
+
+        public void AddAvailableNodes(List<AvailableNode> buildingNodes)
+        {
+            state.World.Map.AvailableNodes.AddRange(buildingNodes);
+        }
+
         public BotObject CreateBotObject(Guid id)
         {
+            Territory territory = new Territory();
+            //state.World.Map.GetTerritories().Add(id, territory);
+
+            BuildingConfig buildingConfig = engineConfig.Buildings.FirstOrDefault(x => x.BuildingType.Equals(BuildingType.Base));
+
+            //Change this  buildingConfig.BuildingType
+            BuildingObject baseBuilding = new BuildingObject(GetNextBotPosition(), buildingConfig.TerritorySquare, BuildingType.Base, buildingConfig.ScoreMultiplier);
+
             var bot = new BotObject
+            (
+                id,
+                0,
+                territory,
+                new List<BuildingObject>() { baseBuilding },
+                engineConfig.StartingFood,
+                engineConfig.StartingUnits,
+                engineConfig.StartingUnits,
+                engineConfig.Seeds.PlayerSeeds[state.Bots.Count]
+            )
             {
-                Id = id,
-                CurrentTierLevel = 0,
-                Map = new BotMapState(),
-                Food = engineConfig.StartingFood,
-                AvailableUnits = engineConfig.StartingUnits,
-                Population = engineConfig.StartingUnits,
-                Position = GetNextBotPosition(),
-                Seed = engineConfig.Seeds.PlayerSeeds[state.Bots.Count]
+                Wood = 50,
+                Gold = 50,
+                Stone = 50,
+                Food = 50,
+                Heat = 50
             };
+
             state.Bots.Add(bot);
-            Logger.LogDebug("WorldGen", $"Adding Bot {id} at position x: {bot.Position.X}, y: {bot.Position.Y}");
+            Logger.LogDebug("WorldGen", $"Adding Bot {id} at position x: {bot.Buildings.First().Position.X}, " +
+                $"y: {bot.Buildings.First().Position.Y}");
+
+            var validAvaialableNodes = ValidateAvaialbleNodes(bot);
+
+
+            //TODO: remove this !
+            Logger.LogDebug("TerritoryNodes", "valid nodes added");
+            Logger.LogDebug("TerritoryNodes", JsonConvert.SerializeObject(validAvaialableNodes, Formatting.Indented));
+
+            AddAvailableNodes(validAvaialableNodes.ToList());
+            Logger.LogDebug("Test = AddAvailableNodes =============================================================================", JsonConvert.SerializeObject(validAvaialableNodes.ToList(), Formatting.Indented));
+
+            //Add avialble node ids to the player bot
+
+            bot.AddAvailableNodeIds(validAvaialableNodes.Select(node => node.Id));
+            Logger.LogDebug("Test = AddAvailableNodes on bot =============================================================================",
+                JsonConvert.SerializeObject(bot.Map.AvailableNodes.ToList(), Formatting.Indented));
+
             return bot;
         }
+        public IList<AvailableNode> ValidateAvaialbleNodes(BotObject bot)
+        {
+
+            HashSet<Position> territoryPositions = bot.Territory.PositionsInTerritory;
+
+            var availablePositionsInTerritory = territoryPositions.Except(positionsInUse);
+
+            availablePositionsInTerritory.ToList().ForEach(availablePositions => Logger.LogDebug("terrtory", JsonConvert.SerializeObject(availablePositions)));
+
+            var availableNodes = availablePositionsInTerritory.Select(
+
+                position => new AvailableNode(position)
+                {
+                    MaxUnits = 10, //TODO: update
+                }
+                ).ToList();
+
+            positionsInUse.UnionWith(availablePositionsInTerritory);
+
+            return availableNodes;
+        }
+
+
 
         private Position GetNextBotPosition()
         {
@@ -134,7 +216,36 @@ namespace Engine.Services
 
         public ResourceNode GetResourceNode(Guid id)
         {
-            return state.World.Map.ResolveNode(id);
+            return state.World.Map.ResolveResourceNode(id);
+        }
+        public Node GetNode(Guid id)
+        {
+            var node = state.World.Map.ResolveNode(id);
+            if (node is null)
+            {
+                Logger.LogDebug("error", $"{id} does not exist");
+            }
+            return node;
+        }
+
+        public AvailableNode GetAvailableNode(BotObject bot, Guid id)
+        {
+            return state.World.Map.ResolveAvailableNode(id);
+        }
+
+
+        public void UpdateTerritory(BotObject bot, List<Position> newTerritoryNodes)
+        {
+            //      state.World.Map.ScoutTowers.ForEach(scoutTower => territory.PositionsInTerritory.Union());
+
+            foreach (var position in newTerritoryNodes)
+            {
+                bot.Territory.AddPosition(position);
+
+                var st = GetScoutTowerByRegion(state.World.Map.ScoutTowers, position);
+
+                st.AddTerritoryNode(bot.BotId, position);
+            }
         }
 
         public void AddResourceToMap(ResourceNode resourceNode)
@@ -147,13 +258,21 @@ namespace Engine.Services
             return state.World.GetScoutTower(id);
         }
 
+        public ScoutTower GetScoutTowerByRegion(List<ScoutTower> scoutTowers, Position position)
+        {
+            int regionSize = engineConfig.RegionSize;
+            int xBucket = position.X / regionSize;
+            int yBucket = position.Y / regionSize;
+
+            return scoutTowers.FirstOrDefault(tower => tower.XRegion == xBucket && tower.YRegion == yBucket);
+        }
+
         public ResourceNode GetScoutTowerAsResourceNode(Guid id)
         {
             var scoutTower = GetScoutTower(id);
             return scoutTower != null
-                ? new ResourceNode
+                ? new ResourceNode(scoutTower.Position)
                 {
-                    Position = scoutTower.Position,
                     WorkTime = engineConfig.ScoutWorkTime,
                 }
                 : null;
@@ -161,15 +280,15 @@ namespace Engine.Services
 
         public ResourceNode GetBaseAsResourceNode(BotObject bot)
         {
-            return new ResourceNode
+            return new ResourceNode(bot.GetBasePosition())
             {
-                Position = bot.Position,
                 WorkTime = randomGenerator.Next(engineConfig.ResourceGenerationConfig.Campfire.WorkTimeRange[0],
-                    engineConfig.ResourceGenerationConfig.Campfire.WorkTimeRange[1])
+                                engineConfig.ResourceGenerationConfig.Campfire.WorkTimeRange[1])
             };
+
         }
 
-        public ResourceNode ResolveNode(PlayerAction playerAction)
+        public Node ResolveNode(PlayerAction playerAction)
         {
             switch (playerAction.ActionType)
             {
@@ -181,6 +300,21 @@ namespace Engine.Services
                 case ActionType.Farm:
                 case ActionType.Lumber:
                     return GetResourceNode(playerAction.TargetNodeId);
+                case ActionType.Quarry:
+                    return GetAvailableNode(playerAction.Bot, playerAction.TargetNodeId);
+                case ActionType.Error:
+                default:
+                    return null;
+            }
+        }
+
+        //TODO: see if I can remove this
+        public Position ResolveNodePosition(PlayerAction playerAction)
+        {
+            switch (playerAction.ActionType)
+            {
+                case ActionType.Quarry:
+                    return GetAvailableNode(playerAction.Bot, playerAction.TargetNodeId).Position;
                 case ActionType.Error:
                 default:
                     return null;
@@ -234,7 +368,8 @@ namespace Engine.Services
             {
                 position = new Position
                 {
-                    X = randomGenerator.Next(lowerX, upperX), Y = randomGenerator.Next(lowerY, upperY)
+                    X = randomGenerator.Next(lowerX, upperX),
+                    Y = randomGenerator.Next(lowerY, upperY)
                 };
                 count++;
 
@@ -275,11 +410,12 @@ namespace Engine.Services
             int lowerY = j * regionSize;
             int upperY = (j + 1) * regionSize;
 
-            var newScoutTower = new ScoutTower
+            var newScoutTower = new ScoutTower(GenerateRandomPosition(lowerX, upperX, lowerY, upperY, scoutTowersPositionsInUse, 1,
+                    false, true))
             {
                 Id = Guid.NewGuid(),
-                Position = GenerateRandomPosition(lowerX, upperX, lowerY, upperY, scoutTowersPositionsInUse, 1,
-                    false, true)
+                XRegion = i,
+                YRegion = j
             };
             positionsInUse.Add(newScoutTower.Position);
             return newScoutTower;
@@ -332,6 +468,8 @@ namespace Engine.Services
             {
                 foreach (var y in shuffledRegionsIndices)
                 {
+
+                    var validPosition = new Position();
                     // Calculate amount of certain resource in region
                     // Generate valid positions for each node based on distribution - if no valid position do not place node
 
@@ -346,8 +484,8 @@ namespace Engine.Services
                         engineConfig.ResourceGenerationConfig.Farm.QuantityRangePerRegion[1]);
                     for (int i = 0; i < numberOfFarms; i++)
                     {
-                        var validPosition = GenerateValidPosition(x, y, engineConfig.ResourceGenerationConfig.Farm,
-                            farmPositionsInUse);
+                        validPosition = GenerateValidPosition(x, y, engineConfig.ResourceGenerationConfig.Farm, farmPositionsInUse);
+
                         if (validPosition is null)
                         {
                             continue;
@@ -356,10 +494,9 @@ namespace Engine.Services
                         var amount = randomGenerator.Next(
                             engineConfig.ResourceGenerationConfig.Farm.AmountRange[0],
                             engineConfig.ResourceGenerationConfig.Farm.AmountRange[1]);
-                        var node = new ResourceNode()
+                        var node = new ResourceNode(validPosition)
                         {
                             Id = Guid.NewGuid(),
-                            Position = validPosition,
                             Type = ResourceType.Food,
                             Amount = amount,
                             MaxResourceAmount = amount,
@@ -394,17 +531,16 @@ namespace Engine.Services
                         engineConfig.ResourceGenerationConfig.Wood.QuantityRangePerRegion[1]);
                     for (int i = 0; i < numberOfWoodNodes; i++)
                     {
-                        var validPosition = GenerateValidPosition(x, y, engineConfig.ResourceGenerationConfig.Wood,
+                        validPosition = GenerateValidPosition(x, y, engineConfig.ResourceGenerationConfig.Wood,
                             woodPositionsInUse);
                         if (validPosition is null)
                         {
                             continue;
                         }
 
-                        var node = new ResourceNode()
+                        var node = new ResourceNode(validPosition)
                         {
                             Id = Guid.NewGuid(),
-                            Position = validPosition,
                             Type = ResourceType.Wood,
                             MaxUnits = randomGenerator.Next(
                                 engineConfig.ResourceGenerationConfig.Wood.MaxUnitsRange[0],
@@ -429,17 +565,16 @@ namespace Engine.Services
                         engineConfig.ResourceGenerationConfig.Stone.QuantityRangePerRegion[1]);
                     for (int i = 0; i < numberOfStoneNodes; i++)
                     {
-                        var validPosition = GenerateValidPosition(x, y, engineConfig.ResourceGenerationConfig.Stone,
+                        validPosition = GenerateValidPosition(x, y, engineConfig.ResourceGenerationConfig.Stone,
                             stonePositionsInUse);
                         if (validPosition is null)
                         {
                             continue;
                         }
 
-                        var node = new ResourceNode()
+                        var node = new ResourceNode(validPosition)
                         {
                             Id = Guid.NewGuid(),
-                            Position = validPosition,
                             Type = ResourceType.Stone,
                             MaxUnits = randomGenerator.Next(
                                 engineConfig.ResourceGenerationConfig.Stone.MaxUnitsRange[0],
@@ -453,6 +588,42 @@ namespace Engine.Services
                             Amount = randomGenerator.Next(
                                 engineConfig.ResourceGenerationConfig.Stone.AmountRange[0],
                                 engineConfig.ResourceGenerationConfig.Stone.AmountRange[1])
+                        };
+                        nodes.Add(node);
+                        regionScoutTower.Nodes.Add(node.Id);
+                    }
+
+                    //Gold
+                    var numberOfGoldNodes = randomGenerator.Next(
+                        engineConfig.ResourceGenerationConfig.Gold.QuantityRangePerRegion[0],
+                        engineConfig.ResourceGenerationConfig.Gold.QuantityRangePerRegion[1]);
+                    for (int i = 0; i < numberOfGoldNodes; i++)
+                    {
+                        validPosition = GenerateValidPosition(x, y, engineConfig.ResourceGenerationConfig.Gold,
+                            goldPositionsInUse);
+
+                        if (validPosition is null)
+                        {
+                            continue;
+                        }
+
+                        var node = new ResourceNode(validPosition)
+                        {
+                            Id = Guid.NewGuid(),
+                            Position = validPosition,
+                            Type = ResourceType.Gold,
+                            MaxUnits = randomGenerator.Next(
+                                engineConfig.ResourceGenerationConfig.Gold.MaxUnitsRange[0],
+                                engineConfig.ResourceGenerationConfig.Gold.MaxUnitsRange[1]),
+                            Reward = randomGenerator.Next(
+                                engineConfig.ResourceGenerationConfig.Gold.RewardRange[0],
+                                engineConfig.ResourceGenerationConfig.Gold.RewardRange[1]),
+                            WorkTime = randomGenerator.Next(
+                                engineConfig.ResourceGenerationConfig.Gold.WorkTimeRange[0],
+                                engineConfig.ResourceGenerationConfig.Gold.WorkTimeRange[1]),
+                            Amount = randomGenerator.Next(
+                                engineConfig.ResourceGenerationConfig.Gold.AmountRange[0],
+                                engineConfig.ResourceGenerationConfig.Gold.AmountRange[1])
                         };
                         nodes.Add(node);
                         regionScoutTower.Nodes.Add(node.Id);
@@ -471,6 +642,7 @@ namespace Engine.Services
         public IEnumerable<Guid> GetScoutTowerInformation(Guid id)
         {
             var scoutTower = state.World.GetScoutTower(id);
+            //TODO: remove this
             return scoutTower != null ? scoutTower.Nodes : new List<Guid>();
         }
 
@@ -493,7 +665,7 @@ namespace Engine.Services
             state.Bots.Select(
                     bot => new PlayerResult
                     {
-                        Id = bot.Id.ToString(),
+                        Id = bot.BotId.ToString(),
                         Placement = bot.Placement,
                         MatchPoints = GetMatchPointsFromPlacement(bot.Placement),
                         Score = bot.Score,
@@ -504,6 +676,6 @@ namespace Engine.Services
                     })
                 .ToList();
 
-        private int GetMatchPointsFromPlacement(int placement) => (engineConfig.BotCount - placement + 1) * 2;
+        private int GetMatchPointsFromPlacement(int placement) => ((engineConfig.BotCount - placement) + 1) * 2;
     }
 }

@@ -22,12 +22,20 @@ namespace Engine.Interfaces
         int GetCurrentTick();
         IEnumerable<Guid> GetScoutTowerInformation(Guid id);
         string GetWorldState();
+        ISet<Position> GetPositionsInUse();
+        void AddPositionInUse(Position position);
+        void UpdateTerritory(BotObject bot, List<Position> newTerritoryNodes);
         GameState GetState();
         ResourceNode GetResourceNode(Guid id);
+        Node GetNode(Guid id);
         void AddResourceToMap(ResourceNode resourceNode);
         ScoutTower GetScoutTower(Guid id);
         ResourceNode GetScoutTowerAsResourceNode(Guid id);
         ResourceNode GetBaseAsResourceNode(BotObject bot);
-        ResourceNode ResolveNode(PlayerAction playerAction);
+        Node ResolveNode(PlayerAction playerAction);
+        Position ResolveNodePosition(PlayerAction playerAction);
+        void RemoveAvailableNode(Guid availableNodeId);
+        IList<AvailableNode> ValidateAvaialbleNodes(BotObject bot);
+        void AddAvailableNodes(List<AvailableNode> buildingNodes);
     }
 }

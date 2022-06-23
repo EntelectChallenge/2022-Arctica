@@ -17,7 +17,13 @@ EngineTests/bin/
 
 EngineTests/obj/
 
-GameEngine/
+#GameEngine/
+
+GameRunner/obj
+GameRunner/bin
+
+Logger/obj
+Logger/bin
 
 *publish/
 

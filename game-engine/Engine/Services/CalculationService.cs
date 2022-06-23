@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Domain.Configs;
 using Domain.Enums;
 using Domain.Models;
 using Engine.Handlers.Actions;
@@ -24,23 +25,23 @@ namespace Engine.Services
 
         private int GetFoodConsumption(BotObject bot)
         {
-            return (int) Math.Ceiling(bot.GetPopulation() * engineConfig.UnitConsumptionRatio.Food);
+            return (int)Math.Ceiling(bot.GetPopulation() * engineConfig.UnitConsumptionRatio.Food);
         }
 
         private int GetWoodConsumption(BotObject bot)
         {
             // TODO: Add the heat consumption stuff here
-            return (int) Math.Ceiling(engineConfig.UnitConsumptionRatio.Wood);
+            return (int)Math.Ceiling(engineConfig.UnitConsumptionRatio.Wood);
         }
 
         private int GetStoneConsumption(BotObject bot)
         {
-            return (int) Math.Ceiling(engineConfig.UnitConsumptionRatio.Stone);
+            return (int)Math.Ceiling(engineConfig.UnitConsumptionRatio.Stone);
         }
 
         private int GetHeatConsumption(BotObject bot)
         {
-            return (int) Math.Ceiling(bot.GetPopulation() * engineConfig.UnitConsumptionRatio.Heat);
+            return (int)Math.Ceiling(bot.GetPopulation() * engineConfig.UnitConsumptionRatio.Heat);
         }
 
         public int CalculateFoodUpkeep(BotObject bot)
@@ -79,7 +80,7 @@ namespace Engine.Services
             var heatSurplus = (bot.Heat - GetHeatConsumption(bot)) * engineConfig.ResourceImportance.Heat;
             var foodSurplus = (bot.Food - GetFoodConsumption(bot)) * engineConfig.ResourceImportance.Food;
 
-            var minResourceSurplus = (double) Math.Min(heatSurplus, foodSurplus);
+            var minResourceSurplus = (double)Math.Min(heatSurplus, foodSurplus);
 
             var populationRangeMin = bot.Population * -0.5;
             var populationRangeMax = bot.Population * 0.5;
@@ -92,7 +93,7 @@ namespace Engine.Services
             var populationChangeFactor =
                 (minResourceSurplus - populationRangeMin) * (populationChangeMax - populationChangeMin) /
                 (populationRangeMax - populationRangeMin) + populationChangeMin;
-            
+
             var populationChange = Math.Ceiling(bot.Population * populationChangeFactor);
 
             Logger.LogInfo("Calculation Service", $"Population change factor {populationChangeFactor}");
@@ -107,7 +108,7 @@ namespace Engine.Services
                 }
             }
 
-            return (int) populationChange;
+            return (int)populationChange;
         }
 
         public PopulationTier GetBotPopulationTier(BotObject bot)
@@ -135,9 +136,9 @@ namespace Engine.Services
             return 0;
         }
 
-        public int GetTravelTime(ResourceNode targetNode, BotObject bot)
+        public int GetTravelTime(Node targetNode, BotObject bot)
         {
-            var distance = CalculateDistance(targetNode.Position, bot.Position);
+            var distance = CalculateDistance(targetNode.Position, bot.GetBasePosition());
 
             // What should multiplier depend on? - weather, group size, action type, etc.
             // move to config 
@@ -145,7 +146,7 @@ namespace Engine.Services
 
             var travelRate = 1;
 
-            return (int) Math.Round(distance * travelRate);
+            return (int)Math.Round(distance * travelRate);
         }
 
         public int GetWorkTime(ResourceNode node, PlayerAction action)
@@ -153,6 +154,15 @@ namespace Engine.Services
             // Calculate the work time for the action: default to the nodes work time
             // Can be altered with affects from buildings
             return node.WorkTime;
+        }
+
+        public int GetWorkTime(AvailableNode node, PlayerAction action)
+        {
+            // Calculate the work time for the action: default to the nodes work time
+
+            //TODO: reduce time here, if there are more units working OR restrict the number of units the can build at a time
+
+            return engineConfig.Buildings.FirstOrDefault(buildingConfig => (short)action.ActionType == (short)buildingConfig.BuildingType).BuildTime;
         }
 
         public int CalculateAmountExtracted(ResourceNode node, PlayerAction action)
@@ -166,14 +176,30 @@ namespace Engine.Services
                 return action.NumberOfUnits * reward;
             }
 
+            var statusMultiplier = action.Bot.StatusMultiplier;
+
             return node.Type switch
             {
-                ResourceType.Food => action.NumberOfUnits * node.Reward,
-                ResourceType.Wood => action.NumberOfUnits * node.Reward,
-                ResourceType.Stone => action.NumberOfUnits * node.Reward,
+                ResourceType.Food => action.NumberOfUnits * ApplyStatusMuliplier(node, action, statusMultiplier.FoodReward),
+                ResourceType.Wood => action.NumberOfUnits * ApplyStatusMuliplier(node, action, statusMultiplier.WoodReward),
+                ResourceType.Stone => action.NumberOfUnits * ApplyStatusMuliplier(node, action, statusMultiplier.StoneReward),
+                ResourceType.Gold => action.NumberOfUnits * ApplyStatusMuliplier(node, action, statusMultiplier.GoldReward),
                 _ => 0
             };
         }
+
+        private int ApplyStatusMuliplier(ResourceNode node, PlayerAction action, int statusMultipler)
+        {
+            var isIntTerritory = IsInTerritory(node, action);
+
+            return node.Reward + (isIntTerritory ? statusMultipler : 0);
+        }
+
+        private bool IsInTerritory(ResourceNode resourceNode, PlayerAction action)
+        {
+            return action.Bot.Territory.Contains(resourceNode.Position);
+        }
+
 
         public int CalculateTotalAmountExtracted(ResourceNode resourceNode, List<PlayerAction> playerActions)
         {
@@ -195,7 +221,8 @@ namespace Engine.Services
                 bot.GetPopulation() * engineConfig.ResourceScoreMultiplier.Population +
                 bot.Wood * engineConfig.ResourceScoreMultiplier.Wood +
                 bot.Stone * engineConfig.ResourceScoreMultiplier.Stone +
-                bot.Food * engineConfig.ResourceScoreMultiplier.Food;
+                bot.Food * engineConfig.ResourceScoreMultiplier.Food +
+                bot.Buildings.Sum(building => building.ScoreMultiplier);
             return score;
         }
     }

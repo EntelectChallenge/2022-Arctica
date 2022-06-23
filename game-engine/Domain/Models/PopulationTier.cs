@@ -12,8 +12,8 @@ namespace Domain.Models
         public string Name { get; set; }// Tier 1 - 5
         public int MaxPopulation { get; set; }// max population
         public IList<double> PopulationChangeFactorRange { get; set; }// -0.05, 0.05
-        public TierResourceConstraints TierResourceConstraints { get; set; }// Food, Wood, Stone
+        public TierResourceConstraints TierResourceConstraints { get; set; }// Food, Wood, Stone, Gold
 
-        public TierResourceConstraints TierMaxResources { get; set; }// Food, Wood, Stone
+        public TierResourceConstraints TierMaxResources { get; set; }// Food, Wood, Stone, Gold
     }
 }

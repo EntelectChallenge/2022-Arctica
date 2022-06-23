@@ -1,3 +1,7 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+
 namespace Domain.Models
 {
     public class Position
@@ -14,17 +18,47 @@ namespace Domain.Models
         public Position()
         {
         }
-
-        public static bool operator ==(Position position1, Position position2)
+        
+        protected bool Equals(Position other)
         {
-            if (position1 is null || position2 is null)
-                return false;
-            return position1.X == position2.X && position1.Y == position2.Y;
+            return X == other.X && Y == other.Y;
         }
 
-        public static bool operator !=(Position position1, Position position2)
+        public override bool Equals(object obj)
         {
-            return !(position1 == position2);
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Position) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(X, Y);
+        }
+
+
+        public static bool operator == (Position position1, Position position2)
+        {
+            return position1 != null && position1.Equals(position2);
+        }
+
+        public static bool operator != (Position position1, Position position2)
+        {
+            return !(position1.Equals(position2));
+        }
+    }
+
+    public class PositionComparer : IEqualityComparer<Position>
+    {
+        public bool Equals(Position p1, Position p2)
+        {
+            return !ReferenceEquals(p1, null) && p1.Equals(p2);
+        }
+
+        public int GetHashCode(Position obj)
+        {
+            return obj.GetHashCode();
         }
     }
 }

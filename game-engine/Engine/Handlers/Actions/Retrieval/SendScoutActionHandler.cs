@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Domain.Configs;
 using Domain.Enums;
 using Domain.Models;
 using Domain.Services;
@@ -23,7 +24,7 @@ namespace Engine.Handlers.Actions.Retrieval
 
         public bool IsApplicable(ActionType type) => type == ActionType.Scout;
 
-        public void ProcessActionComplete(ResourceNode resourceNode, List<PlayerAction> playerActions)
+        public void ProcessActionComplete(Node node, List<PlayerAction> playerActions)
         {
             Logger.LogInfo("Scout Action Handler", "Processing Scout Completed Actions");
             foreach (var playerAction in playerActions)

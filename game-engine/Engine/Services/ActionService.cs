@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Domain.Configs;
 using Domain.Enums;
 using Domain.Models;
 using Domain.Services;
@@ -36,7 +37,6 @@ namespace Engine.Services
                 command.Id);
         }
 
-        //TODO: test
         public void PushPlayerAction(Guid botId, CommandAction commandAction)
         {
             var playerAction = GetPlayerActionFromCommand(commandAction);
@@ -46,18 +46,33 @@ namespace Engine.Services
 
             if (targetBot == null) return;
 
-            var resourceNode = worldStateService.ResolveNode(playerAction);
+            //Figure out if this is a building node or a resource node           
+            var node = worldStateService.ResolveNode(playerAction);
 
-            if (resourceNode != null && IsValid(playerAction, resourceNode.Type))
+            // var resourceNode = worldStateService.ResolveNode(playerAction);
+
+            if (node != null && IsValid(playerAction, node.Type))
             {
-                var travelTime = calculationService.GetTravelTime(resourceNode, targetBot);
-                var workTime = calculationService.GetWorkTime(resourceNode, playerAction);
+                var travelTime = calculationService.GetTravelTime(node, targetBot);
+
+                int workTime = 0;
+
+                switch (node.GameObjectType)
+                {
+                    case GameObjectType.ResourceNode:
+                        workTime = calculationService.GetWorkTime((ResourceNode)node, playerAction);
+                        break;
+                    case GameObjectType.AvailableNode:
+                        workTime = calculationService.GetWorkTime((AvailableNode)node, playerAction);
+                        break;
+                }
+
                 // Todo: does this still work with the resource workTime that has been added?
                 playerAction.SetStartAndEndTicks(worldStateService.GetCurrentTick(), travelTime, workTime);
 
                 // Logger.LogInfo("ActionService", $"Bot: {botId}, Issued command: {playerAction.ActionType} in tick {worldStateService.GetCurrentTick()}, with {playerAction.NumberOfUnits} units to start at: {playerAction.StartTick}, and to end at: {playerAction.ExpectedCompletedTick}");
 
-                targetBot.AddAction(playerAction, resourceNode);
+                targetBot.AddAction(playerAction, node);
             }
             else
             {
@@ -65,23 +80,23 @@ namespace Engine.Services
             }
         }
 
-        public void HandleCompletedPlayerAction(ResourceNode resourceNode, List<PlayerAction> playerActions,
+
+        public void HandleCompletedPlayerAction(Node node, List<PlayerAction> playerActions,
             ActionType type)
         {
             var handler = actionHandlerResolver.ResolveHandler(type);
-            handler.ProcessActionComplete(resourceNode, playerActions);
+            handler.ProcessActionComplete(node, playerActions);
         }
 
         private bool IsValid(PlayerAction action, ResourceType resourceType)
         {
-            // TODO: Check resource cost for buildings - PHASE 2
             var validUnitAmount = (action.Bot.AvailableUnits >= action.NumberOfUnits) && action.NumberOfUnits > 0;
             var actionTypeAndResourceTypeMatch = ActionTypeMatchesResourceType(action.ActionType, resourceType);
             var resourceRequirementsMet = AreSufficientResourcesAvailable(action);
-            
+
             return validUnitAmount && actionTypeAndResourceTypeMatch && resourceRequirementsMet;
         }
-        
+
         public bool ActionTypeMatchesResourceType(ActionType actionType, ResourceType resourceType)
         {
             return actionType switch
@@ -89,7 +104,12 @@ namespace Engine.Services
                 ActionType.Error => false,
                 ActionType.Scout => true,
                 ActionType.StartCampfire => true,
-                ActionType.Mine => resourceType == ResourceType.Stone,
+                ActionType.Quarry => resourceType == ResourceType.Available,
+                // ActionType.anotherBuilding => true,
+                // ActionType.anotherBuilding => true,
+                // ActionType.anotherBuilding => true,
+                // ActionType.anotherBuilding => true,
+                ActionType.Mine => ((resourceType == ResourceType.Stone) || (resourceType == ResourceType.Gold)),
                 ActionType.Farm => resourceType == ResourceType.Food,
                 ActionType.Lumber => resourceType == ResourceType.Wood,
                 _ => false

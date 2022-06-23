@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Domain.Configs;
 using Domain.Enums;
 using Domain.Models;
 using Domain.Services;
@@ -28,14 +29,17 @@ namespace Engine.Handlers.Actions.Retrieval
 
         public bool IsApplicable(ActionType type) => type == ActionType.Mine;
 
-        public void ProcessActionComplete(ResourceNode resourceNode, List<PlayerAction> playerActions)
+        public void ProcessActionComplete(Node node, List<PlayerAction> playerActions)
         {
-            // TODO: please write unit tests for this
+
+            var resourceNode = (ResourceNode)node;
             Logger.LogInfo("Miner Action Handler", "Processing Miner Completed Actions");
+            // update to use new numbers
             var totalAmountExtracted = calculationService.CalculateTotalAmountExtracted(resourceNode, playerActions);
 
             var calculatedTotalAmount =
                 totalAmountExtracted < resourceNode.Amount ? totalAmountExtracted : resourceNode.Amount;
+
 
             var totalUnitsAtResource = playerActions.Sum(x => x.NumberOfUnits);
 
@@ -45,16 +49,31 @@ namespace Engine.Handlers.Actions.Retrieval
 
                 double distributionFactor =
                     Convert.ToDouble(calculatedTotalAmount) / Convert.ToDouble(totalUnitsAtResource);
-                var stoneDistributed = (int) Math.Round(playerAction.NumberOfUnits * distributionFactor);
+                var resourceDistributed = (int)Math.Round(playerAction.NumberOfUnits * distributionFactor);
 
-                var maxResourceDistributed = botPopulationTier.TierMaxResources.Stone - playerAction.Bot.Stone;
-                stoneDistributed = stoneDistributed.NeverMoreThan(maxResourceDistributed);
-                
-                Logger.LogInfo("Miner Action Handler",
-                    $"Bot {playerAction.Bot.Id} received {stoneDistributed} amount of stone");
-                playerAction.Bot.Stone += stoneDistributed;
 
-                resourceNode.Amount -= stoneDistributed;
+                if (resourceNode.Type == ResourceType.Stone)
+                {
+                    var maxResourceDistributed = botPopulationTier.TierMaxResources.Stone - playerAction.Bot.Stone;
+                    resourceDistributed = resourceDistributed.NeverMoreThan(maxResourceDistributed);
+
+                    Logger.LogInfo("Miner Action Handler",
+                        $"Bot {playerAction.Bot.BotId} received {resourceDistributed} amount of gold");
+
+                    playerAction.Bot.Stone += resourceDistributed;
+                }
+                else
+                {
+                    var maxResourceDistributed = botPopulationTier.TierMaxResources.Gold - playerAction.Bot.Gold;
+                    resourceDistributed = resourceDistributed.NeverMoreThan(maxResourceDistributed);
+
+                    Logger.LogInfo("Miner Action Handler",
+                        $"Bot {playerAction.Bot.BotId} received {resourceDistributed} amount of gold");
+
+                    playerAction.Bot.Gold += resourceDistributed;
+                }
+
+                resourceNode.Amount -= resourceDistributed;
                 resourceNode.CurrentUnits -= playerAction.NumberOfUnits;
             }
         }

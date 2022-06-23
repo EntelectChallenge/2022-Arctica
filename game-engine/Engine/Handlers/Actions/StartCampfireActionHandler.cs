@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Domain.Configs;
 using Domain.Enums;
 using Domain.Models;
 using Domain.Services;
@@ -27,8 +28,10 @@ namespace Engine.Handlers.Actions
         
         public bool IsApplicable(ActionType type) => type == ActionType.StartCampfire;
 
-        public void ProcessActionComplete(ResourceNode resourceNode, List<PlayerAction> playerActions)
+        public void ProcessActionComplete(Node node, List<PlayerAction> playerActions)
         {
+            var resourceNode = (ResourceNode)node;
+
             Logger.LogInfo("Burn Wood Action Handler", "Processing Burn Wood Completed Actions");
             foreach (var playerAction in playerActions)
             {

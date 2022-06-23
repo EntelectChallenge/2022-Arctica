@@ -3,8 +3,9 @@
     public enum GameObjectType
     {
         Error = 0,
-        PlayerBase = 1,
+        Building = 1,
         ScoutTower = 2,
-        ResourceNode = 3
+        ResourceNode = 3,
+        AvailableNode = 4
     }
 }

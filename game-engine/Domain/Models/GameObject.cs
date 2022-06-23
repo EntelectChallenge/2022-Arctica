@@ -10,15 +10,13 @@ namespace Domain.Models
         public GameObjectType GameObjectType { get; set; }
         public Position Position { get; set; }
 
-        public GameObject()
+        public GameObject() { }
+
+        public GameObject(GameObjectType type, Position position)
         {
-            
-        }
-        
-        public GameObject(GameObjectType type)
-        {
-            Id = new Guid();
+            Id = Guid.NewGuid();
             GameObjectType = type;
+            Position = position;
         }
 
         // Todo: please fix this because it is breaking the logger
@@ -34,7 +32,7 @@ namespace Domain.Models
             new GameObject
             {
                 Id = id,
-                GameObjectType = (GameObjectType) stateList[3],
+                GameObjectType = (GameObjectType)stateList[3],
                 Position = new Position
                 {
                     X = stateList[4],

@@ -24,16 +24,16 @@ jobs:
         dotnet-version: 6.0.x
 
     - name: Build Game Runner
-      run: dotnet publish --configuration Release --output ../runner-publish
-      working-directory: game-runner
+      run: dotnet publish GameRunner --configuration Release --output ../runner-publish
+      working-directory: game-engine
 
     - name: Build Game Engine
-      run: dotnet publish --configuration Release --output ../engine-publish
+      run: dotnet publish Engine --configuration Release --output ../engine-publish
       working-directory: game-engine
 
     - name: Build Game Logger
-      run: dotnet publish --configuration Release --output ../logger-publish
-      working-directory: game-logger
+      run: dotnet publish Logger --configuration Release --output ../logger-publish
+      working-directory: game-engine
 
     # - name: Build Reference Bot
     #   run: dotnet publish --configuration Release --output ../../reference-bot-publish

@@ -15,12 +15,14 @@ namespace Domain.Models.DTOs
         public Position BaseLocation { get; set; }
         public List<PlayerActionDto> PendingActions { get; set; }
         public List<PlayerActionDto> Actions { get; set; }
+        public List<BuildingObject> Building { get; set; }
+        public List<Position> Territory { get; set; }
         public int AvailableUnits { get; set; }
         public int Seed { get; set; }
         public int Wood { get; set; }
         public int Food { get; set; }
         public int Stone { get; set; }
         public int Heat { get; set; }
-        // public int Gold { get; set; }
+        public int Gold { get; set; }
     }
 }

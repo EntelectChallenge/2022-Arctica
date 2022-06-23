@@ -1,6 +1,6 @@
 # Game Engine
 
-This project contains the Game Engine for the Entelect Challenge 2022
+This project contains the Game Engine, Runner, and Logger for the Entelect Challenge 2022
 
 ## Game Rules
 
@@ -12,13 +12,11 @@ The engine will respect the following environment variables to change how the ga
 
 - `BOT_COUNT`
     - This sets the expected amount of bots to connect before a game will be run
+ 
+- `WORLD_SEED`
+    - This sets the seed of the world, which is used to generate the map and resource distribution 
 
 When these are not specified, the values present in `appsettings.json` will be used.
-
-The game map is additionally dynamically generated based on the number of bots given.
-
-To compute the values of these fields at runtime, each of these fields has a corresponding `fieldnameRatio` named config item in `appsettings.json`
-This is ratio field is then multiplied by the bot count to generate the final world the game will start with.
 
 ## Bespin Release Format
 

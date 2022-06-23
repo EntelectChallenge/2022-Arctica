@@ -16,10 +16,11 @@ namespace Engine.Interfaces
         public int CalculateHeatUpkeep(BotObject bot);
         public int GetPopulationChange(BotObject bot);
         public int GetScore(BotObject bot);
-        public int GetTravelTime(ResourceNode targetNodePosition, BotObject bot);
+        public int GetTravelTime(Node targetNodePosition, BotObject bot);
         public int CalculateAmountExtracted(ResourceNode resourceNode, PlayerAction playerAction);
         public int CalculateTotalAmountExtracted(ResourceNode resourceNode, List<PlayerAction> playerActions);
         public int GetWorkTime(ResourceNode node, PlayerAction playerAction);
+        public int GetWorkTime(AvailableNode node, PlayerAction action);
         public PopulationTier GetBotPopulationTier(BotObject bot);
         public double CalculateDistributionFactor(int calculatedTotalAmount, int totalUnitsAtResource);
         public int CalculateAmountUsed(PlayerAction playerAction);

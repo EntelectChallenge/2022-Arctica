@@ -30,7 +30,22 @@ However, the opposite is also true ☝️ those who do not have their needs bein
 
 Your goal is not only to survive but thrive in this winter landscape. To expand your village and resources, you need to **outcompete** your competitors by having the biggest village at the end of the game. This is primarily based on population size, but individual resources also hold value in the final score.
 
+** a few months later **
+
+Ah, traveller! I see you have managed to establish a fine village in this tough landscape. Your population has grown rather impressively and your camp has begun to spread over quite the area. 
+It seems that some of your villagers are rather knowledgeable as well, some of them craftsmen and builders. I wonder, will you begin to develop your village into a small town? 
+It could very well help with growing your settlement and maximizing your resource gathering.
+
+Traveller, have you seen? Over the hills there are a few more villages that are thriving, just as yours is. In fact, I've seen some of them starting to scout for food and resources rather close to the outskirts of your village. 
+It seems like there might be some competition for the land and resources in these parts. It may be worthwhile to start expanding your territory to ensure that you are able to maintain control over those precious resources!
+It will likely benefit you in the long term!
+
+
 ---
+
+## UPDATE: Phase 2 is out!!
+This new release contains lots of exciting stuff to add to the real-time-strategy carnage.  
+Look forward to buildings, buffs, borders, and bling this round as we start to play with creating buildings and expanding territory. 
 
 ## Contents
 - [The Game](#the-game)
@@ -39,6 +54,7 @@ Your goal is not only to survive but thrive in this winter landscape. To expand 
     - [Game Objects](#game-objects)
         - [Scout Towers](#scout-towers)
         - [Resource Nodes](#resource-nodes)
+        - [Buildings](#buildings)
     - [Game Tick Payload](#game-tick-payload)
         - [World](#world)
         - [Nodes](#nodes)
@@ -51,7 +67,8 @@ Your goal is not only to survive but thrive in this winter landscape. To expand 
         - [Command: MINE](#command-mine)
         - [Command: FARM](#command-farm)
         - [Command: LUMBER](#command-lumber)
-        - [Command: START_CAMPFIRE](#command-startcampfire)
+        - [Command: START_CAMPFIRE](#command-start_campfire)
+        - [Command: QUARRY](#command-quarry)
     - [Inter tick calculations](#inter-tick-calculations)
       - [Travel time](#travel-time)
       - [population tiers](#population-tiers)
@@ -86,7 +103,7 @@ You will have limited visibility depending of the amount of scout towers you hav
 
 At the start of the game you will only have access to your base information and all the scout towers in the map, as shown in the image below.
 
-Once you visit a scout tower, you will have access to the resource nodes surrounding the scout tower.
+Once you visit a scout tower, you will have access to the resource nodes and player territory surrounding the scout tower.
 
 ![starting state](images/fig1.svg)
 ##### starting state
@@ -118,8 +135,8 @@ The player base is where the resources are gathered and where the units reside.
 
 ---
 ### Scout Towers
-Scout towers are the main driver of resource discovery. Each region on the map has a scout tower that holds all the resource node information for that specific region.
-They provide visibility of their region by disclosing the locations of resource nodes and, in the future, rival bases for the bots to make use of.
+Scout towers are the main driver of resource discovery. Each region on the map has a scout tower that holds all the resource node and territory information for that specific region.
+They provide visibility of their region by disclosing the locations of resource nodes and territories of rival bases for the bots to make use of.
 
 By scouting a specific tower, the bot retrieves the information from the scout tower and can now begin to harvest resources from the discovered nodes. A tower only needs to be scouted once to retrieve the region information.
 
@@ -193,20 +210,48 @@ Limited resource supply. Use the **[mine](#command-mine)** command on your units
 
 Limited resource supply. Use the **[lumber](#command-lumber)** command on your units to **chop wood** at this node.
 
-### Day night cycle
+#### Day night cycle
 
 At the end of **10 ticks** all bots enter the night cycle of the game. This is where your people choose to leave or stay based on how much food and warmth they have.
 
 _For more information see **[Population](#population-growthdecline-rate)**_
+
+### Buildings
+This is a new game object that has been added in PHASE 2. Buildings come with the concept of territory: every building has a small territory around it. Each territory is a square shape with the building at the center.
+Buildings can be placed almost anywhere on the map, under two conditions:
+1. The building must be placed on an empty node: if there is a resource there you cannot place a building.
+2. Buildings can only be placed inside your territory.
+To start off with, each bot has a base/village that has a territory of its own. From here you can expand your territory outwards
+
+#### Territory
+Territory is gained on a **first come, first served** basis. This means that territory cannot change once it has been established. The first person to claim a position will be the owner of that position for the rest of the match.
+
+![Territory expanding](images/Expanding Territory.png)
+
+In the image above, there are two bots that are placing buildings (represented as small dark squares), which allow them to expand their territory. Note, the blue territory was placed first, so the yellow territory cannot replace it.
+
+
+---
+
+## Status Effects (Buffs/Debuffs)
+In PHASE 2 we have also added the ability to boost or decrease certain aspects of the game in order to provide a competitive advantage, improve efficiency, or boost the harvesting of resources that are vital to your strategy.
+
+This concept is largely tied to buildings and territory at the moment and we have plans to build on this as we go along.
+
+Currently, these are the specific buffs and debuffs that your bot can make use of:
+- Reward increase when harvesting certain resources
+- Travel time decrease when travelling to nodes in your territory
+- *todo: insert buffs here*
+
 
 ---
 ## Game Tick Payload
 
 ### Engine config
 
-In `tick 0` your bot will receive the full `engineConfig` file. The enginge config is collection of all the important values that the game engine uses. Below is an example of the game engine
+In `tick 0` your bot will receive the full `engineConfig` file. The enginge config is collection of all the important values that the gameengine uses. Below is an example of the game engine
 
-_note: for the complele and up to date values, please refer to the `appsettings.json` file in the `gameengine`_
+_note: for the complete and up to date values, please refer to the `appsettings.json` file in the `gameengine`_
 
 ```jsonc
 
@@ -552,7 +597,12 @@ Example Payload in JSON with types:
 MINE: 2
 ```
 
-This command will send the amount of specified units to mine
+This command will send the amount of specified units to mine. The resource reward will depend on the resource node that you are mining. 
+**Gold has just been added as a new resource type in PHASE 2 so start digging, prospector!**
+
+Resources available to mine:
+- stone
+- gold
 
 Example Payload in JSON with types:
 ```jsonc
@@ -614,6 +664,9 @@ Example Payload in JSON with types:
     "id" : "00000000-0000-0000-0000-000000000000" // destination node - string/UUID/GUID
 }
 ```
+
+### Command: QUARRY
+
 ---
 ## Inter tick calculations
 

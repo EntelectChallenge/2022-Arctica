@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Domain.Configs;
 using Engine.Handlers.Actions;
 using Engine.Handlers.Actions.Retrieval;
 // using Engine.Handlers.Collisions;
@@ -85,6 +86,7 @@ namespace Engine
             services.AddTransient<IActionHandler, SendScoutActionHandler>();
             services.AddTransient<IActionHandler, SendFarmActionHandler> ();
             services.AddTransient<IActionHandler, StartCampfireActionHandler> ();
+            services.AddTransient<IActionHandler, BuildActionHandler> ();
         }
 
 

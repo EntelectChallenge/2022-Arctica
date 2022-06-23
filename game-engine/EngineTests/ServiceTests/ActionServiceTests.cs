@@ -37,7 +37,7 @@ namespace EngineTests.ServiceTests
             /*bot.AddAction(null);*/
 
 
-            Assert.DoesNotThrow(() => actionService.PushPlayerAction(bot.Id, emptyAction));
+            Assert.DoesNotThrow(() => actionService.PushPlayerAction(bot.BotId, emptyAction));
         }
 
         //TODO: Are we using the oldest action or the newest valid action?

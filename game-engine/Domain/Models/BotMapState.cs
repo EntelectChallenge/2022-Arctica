@@ -9,11 +9,12 @@ namespace Domain.Models
     {
         public List<Guid> ScoutTowers { get; set; }
         public List<Guid> Nodes { get; set; }
-
+        public List<Guid> AvailableNodes { get; set; }
         public BotMapState()
         {
             ScoutTowers = new List<Guid>();
             Nodes = new List<Guid>();
+            AvailableNodes = new List<Guid>();
         }
 
         public override string ToString()

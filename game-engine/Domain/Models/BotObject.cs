@@ -1,35 +1,104 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Domain.Configs;
 using Domain.Enums;
 using Domain.Models.DTOs;
-using Domain.Services;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Domain.Models
 {
-    public class BotObject : GameObject
+    public class BotObject
     {
+        public Guid BotId { get; set; }
         public int CurrentTierLevel { get; set; }
         private List<PlayerAction> Actions { get; set; }
         private List<PlayerAction> PendingActions { get; set; }
+        public List<BuildingObject> Buildings { get; set; }
+        public Territory Territory { get; set; }
         public BotMapState Map { get; init; }
         public int Population { get; set; }
         public int AvailableUnits { get; set; }
         public int Score { get; set; }
         public int Placement { get; set; }
         public int Seed { get; init; }
+
+        //Resources:
         public int Wood { get; set; }
         public int Food { get; set; }
         public int Stone { get; set; }
+        public int Gold { get; set; }
         public int Heat { get; set; }
 
-        public BotObject() : base(GameObjectType.PlayerBase)
+        //Config values
+        public StatusMultiplier StatusMultiplier { get; set; }
+        public Dictionary<Enum, double> StatusMultiplier1 { get; set; }
+
+        public BotObject() { }
+
+        public BotObject(Guid botId,
+            int startingTierLevel,
+            Territory territory,
+            List<BuildingObject> buildings,
+            int food,
+            int availableUnits,
+            int population,
+            int seed)
         {
-            PendingActions = new List<PlayerAction>();
+            this.BotId = botId;
+            this.CurrentTierLevel = startingTierLevel;
             Actions = new List<PlayerAction>();
+            PendingActions = new List<PlayerAction>();
             Map = new BotMapState();
+            Territory = territory;
+            Population = population;
+            Buildings = buildings;
+
+            AvailableUnits = availableUnits;
+
+            Seed = seed;
+            Food = food;
+
+            Territory.AddBuilding(Buildings.First());
+
+            StatusMultiplier = new();
         }
+
+        public Position GetBasePosition()
+        {
+            return Buildings.FirstOrDefault(x => x.Type == BuildingType.Base).Position;
+        }
+
+        public void UpdateBuildingList(Guid availableNodeId, BuildingObject building)
+        {
+            Buildings.Add(building);
+
+            Territory.AddBuilding(building);
+
+            //TODO: remove 
+            //AvailableNode availableNode = Map.AvailableNodes.FirstOrDefault(n => n.Id == availableNodeId);
+
+            Map.AvailableNodes.Remove(availableNodeId);
+        }
+
+        //Add territory nodes to the bot map
+
+
+        public void AddStatusEffect(BuildingType buildingType, int statusMuliplier)
+        {
+            //Would this be better?
+            // StatusMultiplier1[buildingType] += statusMuliplier;
+
+            switch (buildingType)
+            {
+                case BuildingType.Quarry:
+                    StatusMultiplier.StoneReward += statusMuliplier;
+                    StatusMultiplier.GoldReward += statusMuliplier;
+                    break;
+            }
+        }
+
+
 
         public int GetUnitsInAction(ActionType type, int currentTick) => Actions
             .Where(x => x.ActionType == type && x.StartTick <= currentTick).Sum(x => x.NumberOfUnits);
@@ -47,8 +116,10 @@ namespace Domain.Models
             return Map.ToString();
         }
 
-        public void AddAction(PlayerAction playerAction, ResourceNode resourceNode)
+        public void AddAction(PlayerAction playerAction, Node node)
         {
+            int availableSpace = 0;
+            int unitsToWork = 0;
             switch (playerAction.ActionType)
             {
                 case ActionType.Scout:
@@ -59,15 +130,30 @@ namespace Domain.Models
                 case ActionType.Mine:
                 case ActionType.Farm:
                 case ActionType.Lumber:
-                    var availableSpace = resourceNode.MaxUnits - resourceNode.CurrentUnits;
-                    var unitsToWork = playerAction.NumberOfUnits >= availableSpace
-                        ? availableSpace
-                        : playerAction.NumberOfUnits;
+                    availableSpace = node.MaxUnits - node.CurrentUnits;
+                    unitsToWork = playerAction.NumberOfUnits >= availableSpace
+                       ? availableSpace
+                       : playerAction.NumberOfUnits;
 
                     if (unitsToWork <= 0) return;
-                    
+
                     playerAction.NumberOfUnits = unitsToWork;
-                    resourceNode.CurrentUnits += unitsToWork;
+                    node.CurrentUnits += unitsToWork;
+                    break;
+                case ActionType.Quarry:
+                    //Should we force players to send a sertin number of builders at a time OR will the number of units sent effect the build duration
+                    playerAction.NumberOfUnits = playerAction.NumberOfUnits >= 1 ? 1 : playerAction.NumberOfUnits;
+
+
+                    availableSpace = node.MaxUnits - node.CurrentUnits;
+                    unitsToWork = playerAction.NumberOfUnits >= availableSpace
+                       ? availableSpace
+                       : playerAction.NumberOfUnits;
+
+                    if (unitsToWork <= 0) return;
+
+                    playerAction.NumberOfUnits = unitsToWork;
+                    node.CurrentUnits += unitsToWork;
                     break;
                 case ActionType.Error:
                 default:
@@ -93,21 +179,23 @@ namespace Domain.Models
 
         public BotDto ToStateObject(GameState gameState) => new BotDto
         {
-            Id = Id,
+            Id = BotId,
             CurrentTierLevel = CurrentTierLevel,
             Tick = gameState.World.CurrentTick,
             Map = Map,
             AvailableUnits = AvailableUnits,
             Population = GetPopulation(),
-            BaseLocation = Position,
+            BaseLocation = GetBasePosition(),
             Seed = Seed,
             Wood = Wood,
             Food = Food,
             Stone = Stone,
-            Heat =  Heat,
+            Gold = Gold,
+            Heat = Heat,
             PendingActions = PendingActions.Select(action => action.ToStateObject()).ToList(),
-            Actions = Actions.Select(action => action.ToStateObject()).ToList()
-            // Gold = Gold,  
+            Actions = Actions.Select(action => action.ToStateObject()).ToList(),
+            Territory = Territory.PositionsInTerritory.ToList(),
+            Building = Buildings
         };
 
         public void VisitScoutTower(Guid scoutTowerId, IEnumerable<Guid> scoutTowerInformation)
@@ -117,6 +205,24 @@ namespace Domain.Models
                 Map.ScoutTowers.Add(scoutTowerId);
                 Map.Nodes.AddRange(scoutTowerInformation);
             }
+        }
+
+        public void AddAvailableNodeIds(IEnumerable<Guid> availableNodes)
+        {
+            if (Map.AvailableNodes.Count == 0)
+            {
+                Map.AvailableNodes.AddRange(availableNodes);
+
+                return;
+            }
+
+            var excludedAvailableNodes = availableNodes.Where(an => !Map.AvailableNodes.Contains(an));
+
+            Console.WriteLine("Nodes avaiable in AddAvaialableNode");
+            Console.WriteLine(JsonConvert.SerializeObject(excludedAvailableNodes, Formatting.Indented));
+
+            Map.AvailableNodes.AddRange(excludedAvailableNodes);
+
         }
     }
 }

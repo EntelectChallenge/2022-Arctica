@@ -1,4 +1,5 @@
 ﻿using System;
+using Domain.Configs;
 using Engine.Extensions;
 using Engine.Models;
 using Microsoft.Extensions.Options;
@@ -19,6 +20,12 @@ namespace Engine.Services
             if (!string.IsNullOrWhiteSpace(botCountEnvarString))
             {
                 botCount = int.Parse(botCountEnvarString);
+            }
+
+            var seedEnvarString = Environment.GetEnvironmentVariable("WORLD_SEED");
+            if (!string.IsNullOrWhiteSpace(seedEnvarString))
+            {
+                Value.WorldSeed = int.Parse(seedEnvarString);
             }
         }
     }

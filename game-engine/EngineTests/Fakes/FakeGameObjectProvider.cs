@@ -34,11 +34,10 @@ namespace EngineTests.Fakes
 
         public ResourceNode GetWoodAt(Position position, int amount)
         {
-            var wood = new ResourceNode
+            var wood = new ResourceNode(position)
             {
                 Id = Guid.NewGuid(),
                 Type = ResourceType.Wood,
-                Position = position,
                 Amount = amount
             };
             worldStateService.AddResourceToMap(wood);
@@ -54,10 +53,9 @@ namespace EngineTests.Fakes
 
         public BotObject GetBotAtDefault()
         {
-            var bot = new BotObject
+            var bot = new BotObject()
             {
-                Id = Guid.NewGuid(),
-                Position = new Position(),
+                BotId = Guid.NewGuid()
             };
             worldStateService.AddBotObject(bot);
             return bot;
@@ -68,8 +66,7 @@ namespace EngineTests.Fakes
             var id = Guid.NewGuid();
             var bot = new BotObject
             {
-                Id = id,
-                Position = new Position()
+                BotId = Guid.NewGuid()
             };
             worldStateService.AddBotObject(bot);
             return bot;
@@ -78,10 +75,9 @@ namespace EngineTests.Fakes
         public ScoutTower GetScoutTowerAt(Position position)
         {
             var id = Guid.NewGuid();
-            var scoutTower = new ScoutTower
+            var scoutTower = new ScoutTower(position)
             {
-                Id = id,
-                Position = position
+                Id = id
             };
             return scoutTower;
         }

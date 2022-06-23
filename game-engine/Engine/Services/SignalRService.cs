@@ -6,8 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Domain.Models;
 using Domain.Services;
-using Engine.Enums;
+using Domain.Configs;
 using Domain.Enums;
+using Engine.Enums;
 using Engine.Interfaces;
 using Engine.Models;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -117,6 +118,7 @@ namespace Engine.Services
                                 engineService.SetHubConnection(ref connection);
                                 await engineService.GameRunLoop();
                             }
+                            //Cannot find matched constructor building
                             catch (Exception e)
                             {
                                 Logger.LogError("Core", $"Failed to run GameRunLoop with error: {e.Message}");

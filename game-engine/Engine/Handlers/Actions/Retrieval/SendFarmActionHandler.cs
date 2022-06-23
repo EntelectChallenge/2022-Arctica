@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Domain.Configs;
 using Domain.Enums;
 using Domain.Models;
 using Domain.Services;
@@ -28,8 +29,11 @@ namespace Engine.Handlers.Actions.Retrieval
 
         public bool IsApplicable(ActionType type) => type == ActionType.Farm;
 
-        public void ProcessActionComplete(ResourceNode resourceNode, List<PlayerAction> playerActions)
+
+        public void ProcessActionComplete(Node node, List<PlayerAction> playerActions)
         {
+            var resourceNode = (ResourceNode)node;
+
             Logger.LogInfo("Farm Action Handler", "Processing Farm Completed Actions");
             var totalAmountExtracted = calculationService.CalculateTotalAmountExtracted(resourceNode, playerActions);
 
@@ -44,13 +48,13 @@ namespace Engine.Handlers.Actions.Retrieval
 
                 double distributionFactor =
                     calculationService.CalculateDistributionFactor(calculatedTotalAmount, totalUnitsAtResource);
-                var foodDistributed = (int) Math.Round(playerAction.NumberOfUnits * distributionFactor);
+                var foodDistributed = (int)Math.Round(playerAction.NumberOfUnits * distributionFactor);
 
                 var maxResourceDistributed = botPopulationTier.TierMaxResources.Food - playerAction.Bot.Food;
                 foodDistributed = foodDistributed.NeverMoreThan(maxResourceDistributed);
 
                 Logger.LogInfo("Farm Action Handler",
-                    $"Bot {playerAction.Bot.Id} received {foodDistributed} amount of food");
+                    $"Bot {playerAction.Bot.BotId} received {foodDistributed} amount of food");
                 playerAction.Bot.Food += foodDistributed;
                 playerAction.Bot.Food = playerAction.Bot.Food.NeverMoreThan(botPopulationTier.TierMaxResources.Food);
 

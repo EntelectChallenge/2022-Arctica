@@ -37,6 +37,8 @@ In this project you will find everything we use to build a starter pack that you
 4. **starter-bots** - Starter bots with limited logic that can be used a starting point for your bot. This folder also contains a bot called `ReferenceBot`, you can use this bot to test your bot against!
 5. **ec-compose** - This folder contains all files required to run this year's game in docker. Refer to the [readme in this folder](./ec-compose/README.md) on how to use it.
 
+**Note**: The GameRunner and Logger have now been moved inside the game-engine project.
+
 This project can be used to get a better understanding of the rules and to help debug your bot.
 
 Improvements and enhancements will be made to the game engine code over time.  The game engine will also evolve during the competition after every battle, so be prepared. Any changes made to the game engine or rules will be updated here, so check in here now and then to see the latest changes and updates.

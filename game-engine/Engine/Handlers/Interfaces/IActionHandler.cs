@@ -7,6 +7,6 @@ namespace Engine.Handlers.Interfaces
     public interface IActionHandler
     {
         bool IsApplicable(ActionType type);
-        void ProcessActionComplete(ResourceNode resourceNode, List<PlayerAction> playerAction);
+        void ProcessActionComplete(Node node, List<PlayerAction> playerAction);
     }
 }

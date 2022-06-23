@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Domain.Configs;
 using Domain.Enums;
 using Domain.Models;
 using Domain.Services;
@@ -28,10 +29,14 @@ namespace Engine.Handlers.Actions.Retrieval
 
         public bool IsApplicable(ActionType type) => type == ActionType.Lumber;
 
-        public void ProcessActionComplete(ResourceNode resourceNode, List<PlayerAction> playerActions)
+        public void ProcessActionComplete(Node node, List<PlayerAction> playerActions)
         {
-            // TODO: please write unit tests for this
+
+            var resourceNode = (ResourceNode)node;
+
             Logger.LogInfo("Lumber Action Handler", "Processing Lumber Completed Actions");
+
+
             var totalAmountExtracted = calculationService.CalculateTotalAmountExtracted(resourceNode, playerActions);
 
             var calculatedTotalAmount =
@@ -45,17 +50,20 @@ namespace Engine.Handlers.Actions.Retrieval
                 var botPopulationTier = calculationService.GetBotPopulationTier(playerAction.Bot);
 
                 double distributionFactor = calculationService.CalculateDistributionFactor(calculatedTotalAmount, totalUnitsAtResource);
-                var woodDistributed = (int) Math.Round(playerAction.NumberOfUnits * distributionFactor);
-                
+                var woodDistributed = (int)Math.Round(playerAction.NumberOfUnits * distributionFactor);
+
                 var maxResourceDistributed = botPopulationTier.TierMaxResources.Wood - playerAction.Bot.Wood;
                 woodDistributed = woodDistributed.NeverMoreThan(maxResourceDistributed);
-                
-                Logger.LogInfo("Lumber Action Handler", $"Bot {playerAction.Bot.Id} received {woodDistributed} amount of wood");
+
+                Logger.LogInfo("Lumber Action Handler", $"Bot {playerAction.Bot.BotId} received {woodDistributed} amount of wood");
                 playerAction.Bot.Wood += woodDistributed;
 
                 resourceNode.Amount -= woodDistributed;
+
                 resourceNode.CurrentUnits -= playerAction.NumberOfUnits;
             }
+
         }
+   
     }
 }

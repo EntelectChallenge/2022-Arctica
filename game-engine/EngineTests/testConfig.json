@@ -31,7 +31,8 @@
       "tierResourceConstraints": {
         "food": 100,
         "wood": 100,
-        "stone": 100
+        "stone": 100,
+        "gold": 100
       },
       "populationIncreaseFactor": 10
     },
@@ -42,7 +43,8 @@
       "resourceConstrains": {
         "food": 1000,
         "wood": 1000,
-        "stone": 1000
+        "stone": 1000,
+        "gold": 1000
       },
       "populationIncreaseFactor": 100
     },
@@ -53,7 +55,8 @@
       "resourceConstrains": {
         "food": 10000,
         "wood": 10000,
-        "stone": 10000
+        "stone": 10000,
+        "gold": 10000
       },
       "populationIncreaseFactor": 1000
     },
@@ -64,7 +67,8 @@
       "resourceConstrains": {
         "food": 100000,
         "wood": 100000,
-        "stone": 100000
+        "stone": 100000,
+        "gold": 100000
       },
       "populationIncreaseFactor": 10000
     },
@@ -75,7 +79,8 @@
       "resourceConstrains": {
         "food": 1000000,
         "wood": 1000000,
-        "stone": 1000000
+        "stone": 1000000,
+        "gold": 1000000
       },
       "populationIncreaseFactor": 100000
     }
@@ -84,7 +89,8 @@
     "Population": 10,
     "Food": 1,
     "Wood": 2,
-    "Stone": 3
+    "Stone": 3,
+    "Gold": 3
   },
   "ResourceGenerationConfig": {
     "Farm": {
@@ -172,7 +178,33 @@
         50000
       ]
     },
-    "Campfire" : {
+    "Gold": {
+      "ProximityDistance": 11,
+      "DistributionZones": [
+        "NonBase"
+      ],
+      "QuantityRangePerRegion": [
+        0,
+        7
+      ],
+      "MaxUnitsRange": [
+        30,
+        100
+      ],
+      "RewardRange": [
+        100,
+        250
+      ],
+      "WorkTimeRange": [
+        24,
+        32
+      ],
+      "AmountRange": [
+        10000,
+        50000
+      ]
+    },
+    "Campfire": {
       "RewardRange": [
         3,
         3
@@ -182,7 +214,7 @@
         1
       ],
       "ResourceConsumption": {
-        "Wood": [3,3]
+        "Wood": [ 3, 3 ]
       }
     }
   },

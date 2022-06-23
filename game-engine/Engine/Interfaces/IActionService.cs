@@ -8,6 +8,6 @@ namespace Engine.Interfaces
     public interface IActionService
     {
         void PushPlayerAction(Guid botId, CommandAction playerAction);
-        void HandleCompletedPlayerAction(ResourceNode resourceNode, List<PlayerAction> playerAction, ActionType type);
+        void HandleCompletedPlayerAction(Node resourceNode, List<PlayerAction> playerAction, ActionType type);
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using Domain.Configs;
 using Domain.Enums;
 using Domain.Models;
 using Domain.Models.DTOs;
@@ -86,8 +87,15 @@ namespace Engine.Services
                 foreach (var bot in worldStateService.GetPlayerBots())
                 {
                     var botGameState = new GameStateDto();
-                    botGameState.BotId = bot.Id;
+                    botGameState.BotId = bot.BotId;
                     botGameState.PopulationTiers = engineConfig.PopulationTiers.ToList();
+
+                    //TODO: print out available nodes
+                    // gameState.World.Map.AvailableNodes.Where(node => bot.Map.AvailableNodes.Contains(node.Id)).ToList()
+
+                  //  Logger.LogDebug("Test = avalable nodes world map", JsonConvert.SerializeObject(gameState.World.Map.AvailableNodes, Formatting.Indented));
+                 //   Logger.LogDebug("Test = available nodes bot map", JsonConvert.SerializeObject(bot.Map.AvailableNodes, Formatting.Indented));
+
                     botGameState.World = new World()
                     {
                         CurrentTick = gameState.World.CurrentTick,
@@ -96,33 +104,38 @@ namespace Engine.Services
                         {
                             Nodes = gameState.World.Map.Nodes.Where(node => bot.Map.Nodes.Contains(node.Id))
                                 .ToList(),
-                            ScoutTowers = gameState.World.Map.ScoutTowers.Select(scoutTower => new ScoutTower()
+                            ScoutTowers = gameState.World.Map.ScoutTowers.Select(scoutTower => new ScoutTower(scoutTower.Position)
                             {
                                 Id = scoutTower.Id,
-                                Position = scoutTower.Position,
-                                GameObjectType = scoutTower.GameObjectType
-                            }).ToList()
+                            }).ToList(),
+                            AvailableNodes = gameState.World.Map.AvailableNodes.Where(node => bot.Map.AvailableNodes.Contains(node.Id)).ToList()
                         }
                     };
                     botGameState.Bots = gameState.Bots.Select(otherBot =>
                     {
-                        if (bot.Id == otherBot.Id)
+                        if (bot.BotId == otherBot.BotId)
                         {
                             return bot.ToStateObject(gameState);
                         }
-
+                        //add terrioties here
                         Console.WriteLine("new botDto");
                         return new BotDto()
-                        {                    
-                            Id = otherBot.Id,
+                        {
+                            Id = otherBot.BotId,
                             Population = otherBot.GetPopulation(),
                             Food = otherBot.Food,
                             Stone = otherBot.Stone,
+                            Territory = otherBot.Territory.PositionsInTerritory.ToList(),
+                            Building = otherBot.Buildings,
                             Wood = otherBot.Wood,
                             Heat = otherBot.Heat,
+                            Gold = otherBot.Gold,
                             CurrentTierLevel = otherBot.CurrentTierLevel
                         };
                     }).ToList();
+
+                    //TODO: remove ==================================================
+                  //  Logger.LogDebug("testing - bot state", JsonConvert.SerializeObject(botGameState, Formatting.Indented));
 
 
                     await hubConnection.InvokeAsync("PublishBotState", botGameState);
@@ -131,7 +144,9 @@ namespace Engine.Services
                 Logger.LogDebug("RunLoop", $"Published bot game states, Time: {stop2.ElapsedMilliseconds}");
 
                 await hubConnection.InvokeAsync("PublishGameState", gameStateDto);
-                // Logger.LogData(gameStateDto.ToString());
+
+               //  Logger.LogData(gameStateDto.ToString());
+
 
                 Logger.LogDebug("RunLoop", $"Published game state, Time: {stop2.ElapsedMilliseconds}");
 
@@ -140,16 +155,13 @@ namespace Engine.Services
 
 
                 // Wait until the game runner has processed the current tick
-                while (TickAcked != worldStateService.GetCurrentTick())
-                {
-                }
-
+                while (TickAcked != worldStateService.GetCurrentTick()) { }
 
                 Logger.LogDebug("RunLoop", $"TickAck matches current tick, Time: {stop2.ElapsedMilliseconds}");
 
                 if (stopwatch.ElapsedMilliseconds < engineConfig.TickRate)
                 {
-                    var delay = (int) (engineConfig.TickRate - stopwatch.ElapsedMilliseconds);
+                    var delay = (int)(engineConfig.TickRate - stopwatch.ElapsedMilliseconds);
                     if (delay > 0)
                     {
                         Thread.Sleep(delay);
@@ -227,10 +239,12 @@ namespace Engine.Services
                                 tier.Level == bot.CurrentTierLevel + 1);
                         if (nextTier != default)
                         {
+                            // TODO: Set gold
                             if (
                                 bot.Population >= currentPopulationTier.MaxPopulation &&
                                 bot.Food >= nextTier.TierResourceConstraints.Food &&
                                 bot.Stone >= nextTier.TierResourceConstraints.Stone &&
+                                //bot.Gold >= nextTier.TierResourceConstraints.Gold &&
                                 bot.Wood >= nextTier.TierResourceConstraints.Wood
                             )
                             {
@@ -252,9 +266,9 @@ namespace Engine.Services
             worldStateService.ApplyAfterTickStateChanges();
             foreach (var bot in bots)
             {
-                Logger.LogInfo("Bot Resources", $"BotId: {bot.Id}");
+                Logger.LogInfo("Bot Resources", $"BotId: {bot.BotId}");
                 Logger.LogInfo("Bot Resources", $"Population: {bot.GetPopulation()} AvailableUnits: {bot.AvailableUnits}");
-                Logger.LogInfo("Bot Resources", $"Food: {bot.Food} Wood: {bot.Wood} Stone: {bot.Stone} Heat: {bot.Heat}");
+                Logger.LogInfo("Bot Resources", $"Food: {bot.Food} Wood: {bot.Wood} Stone: {bot.Stone} Heat: {bot.Heat} Gold: {bot.Gold}");
             }
 
             // stoplog.Log("After Tick SC Complete");
@@ -283,7 +297,7 @@ namespace Engine.Services
 
             // Send all actions for each resource to the relevant handle method
             var independentPlayerActions = new List<PlayerAction>();
-            var groupedPlayerActions = new Dictionary<ResourceNode, List<PlayerAction>>();
+            var groupedPlayerActions = new Dictionary<Node, List<PlayerAction>>();
 
             foreach (var playAction in actionsToComplete)
             {
@@ -296,7 +310,8 @@ namespace Engine.Services
                 {
                     Logger.LogInfo("RunLoop", "Target Node:" + playAction.TargetNodeId);
                     // Logger.LogInfo("RunLoop", "World State: " + worldStateService.GetWorldState());
-                    var node = worldStateService.GetResourceNode(playAction.TargetNodeId);
+
+                    var node = worldStateService.GetNode(playAction.TargetNodeId);
 
                     if (groupedPlayerActions.ContainsKey(node))
                     {
@@ -304,7 +319,7 @@ namespace Engine.Services
                     }
                     else
                     {
-                        groupedPlayerActions.Add(node, new List<PlayerAction> {playAction});
+                        groupedPlayerActions.Add(node, new List<PlayerAction> { playAction });
                     }
                 }
             }
@@ -315,14 +330,19 @@ namespace Engine.Services
                 var targetNode = worldStateService.GetResourceNode(independentPlayerAction.TargetNodeId);
 
                 actionService.HandleCompletedPlayerAction(targetNode,
-                    new List<PlayerAction> {independentPlayerAction},
+                    new List<PlayerAction> { independentPlayerAction },
                     independentPlayerAction.ActionType);
             }
 
             foreach (var node in groupedPlayerActions.Keys)
             {
                 var type = groupedPlayerActions[node].First();
-                actionService.HandleCompletedPlayerAction(node, groupedPlayerActions[node], type.ActionType);
+
+                if ((short)node.Type != (short)GameObjectType.AvailableNode)
+                {
+
+                    actionService.HandleCompletedPlayerAction(node, groupedPlayerActions[node], type.ActionType);
+                }
             }
 
 
@@ -356,7 +376,7 @@ namespace Engine.Services
                 HasWinner = true;
 
                 // TODO: Log win condition 
-                Logger.LogInfo("WinCondition", $"Match end! Winning Bot: {winningBot.Id}");
+                Logger.LogInfo("WinCondition", $"Match end! Winning Bot: {winningBot.BotId}");
 
                 Logger.LogInfo("* * * Scores * * *", "");
 
