@@ -46,11 +46,10 @@ namespace Engine.Services
 
             if (targetBot == null) return;
 
-            //Figure out if this is a building node or a resource node           
+    
             var node = worldStateService.ResolveNode(playerAction);
 
             // var resourceNode = worldStateService.ResolveNode(playerAction);
-
             if (node != null && IsValid(playerAction, node.Type))
             {
                 var travelTime = calculationService.GetTravelTime(node, targetBot);
@@ -105,8 +104,8 @@ namespace Engine.Services
                 ActionType.Scout => true,
                 ActionType.StartCampfire => true,
                 ActionType.Quarry => resourceType == ResourceType.Available,
-                // ActionType.anotherBuilding => true,
-                // ActionType.anotherBuilding => true,
+                ActionType.FarmersGuild => resourceType == ResourceType.Available,
+                ActionType.LumberMill => resourceType == ResourceType.Available,
                 // ActionType.anotherBuilding => true,
                 // ActionType.anotherBuilding => true,
                 ActionType.Mine => ((resourceType == ResourceType.Stone) || (resourceType == ResourceType.Gold)),

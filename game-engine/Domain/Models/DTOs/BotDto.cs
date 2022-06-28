@@ -15,8 +15,9 @@ namespace Domain.Models.DTOs
         public Position BaseLocation { get; set; }
         public List<PlayerActionDto> PendingActions { get; set; }
         public List<PlayerActionDto> Actions { get; set; }
-        public List<BuildingObject> Building { get; set; }
+        public List<BuildingObject> Buildings { get; set; }
         public List<Position> Territory { get; set; }
+        public StatusMultiplier StatusMultiplier { get; set; }
         public int AvailableUnits { get; set; }
         public int Seed { get; set; }
         public int Wood { get; set; }

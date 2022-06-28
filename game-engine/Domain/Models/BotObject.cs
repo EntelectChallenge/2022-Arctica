@@ -32,14 +32,10 @@ namespace Domain.Models
 
         //Config values
         public StatusMultiplier StatusMultiplier { get; set; }
-        public Dictionary<Enum, double> StatusMultiplier1 { get; set; }
-
         public BotObject() { }
 
         public BotObject(Guid botId,
             int startingTierLevel,
-            Territory territory,
-            List<BuildingObject> buildings,
             int food,
             int availableUnits,
             int population,
@@ -50,16 +46,15 @@ namespace Domain.Models
             Actions = new List<PlayerAction>();
             PendingActions = new List<PlayerAction>();
             Map = new BotMapState();
-            Territory = territory;
             Population = population;
-            Buildings = buildings;
 
             AvailableUnits = availableUnits;
 
             Seed = seed;
             Food = food;
 
-            Territory.AddBuilding(Buildings.First());
+            Territory = new Territory();
+            Buildings = new List<BuildingObject>();
 
             StatusMultiplier = new();
         }
@@ -69,7 +64,7 @@ namespace Domain.Models
             return Buildings.FirstOrDefault(x => x.Type == BuildingType.Base).Position;
         }
 
-        public void UpdateBuildingList(Guid availableNodeId, BuildingObject building)
+        public void UpdateBuildingList(BuildingObject building)
         {
             Buildings.Add(building);
 
@@ -78,26 +73,35 @@ namespace Domain.Models
             //TODO: remove 
             //AvailableNode availableNode = Map.AvailableNodes.FirstOrDefault(n => n.Id == availableNodeId);
 
+        }
+
+        public void RemoveAvaialableNode(Guid availableNodeId)
+        {
+
             Map.AvailableNodes.Remove(availableNodeId);
         }
 
         //Add territory nodes to the bot map
 
 
+        //Update status effect object with incomming building buff
         public void AddStatusEffect(BuildingType buildingType, int statusMuliplier)
         {
-            //Would this be better?
-            // StatusMultiplier1[buildingType] += statusMuliplier;
 
             switch (buildingType)
             {
+                case BuildingType.FarmersGuild:
+                    StatusMultiplier.FoodReward += statusMuliplier;
+                    break;
+                case BuildingType.LumberMill:
+                    StatusMultiplier.WoodReward += statusMuliplier;
+                    break;
                 case BuildingType.Quarry:
                     StatusMultiplier.StoneReward += statusMuliplier;
                     StatusMultiplier.GoldReward += statusMuliplier;
                     break;
             }
         }
-
 
 
         public int GetUnitsInAction(ActionType type, int currentTick) => Actions
@@ -141,6 +145,8 @@ namespace Domain.Models
                     node.CurrentUnits += unitsToWork;
                     break;
                 case ActionType.Quarry:
+                case ActionType.FarmersGuild:
+                case ActionType.LumberMill:
                     //Should we force players to send a sertin number of builders at a time OR will the number of units sent effect the build duration
                     playerAction.NumberOfUnits = playerAction.NumberOfUnits >= 1 ? 1 : playerAction.NumberOfUnits;
 
@@ -195,8 +201,15 @@ namespace Domain.Models
             PendingActions = PendingActions.Select(action => action.ToStateObject()).ToList(),
             Actions = Actions.Select(action => action.ToStateObject()).ToList(),
             Territory = Territory.PositionsInTerritory.ToList(),
-            Building = Buildings
+            StatusMultiplier = StatusMultiplier,
+            Buildings = Buildings
         };
+
+        public void UpdateTerritory(Territory territory)
+        {
+            //TODO: Use this method
+            this.Territory = territory;
+        }
 
         public void VisitScoutTower(Guid scoutTowerId, IEnumerable<Guid> scoutTowerInformation)
         {

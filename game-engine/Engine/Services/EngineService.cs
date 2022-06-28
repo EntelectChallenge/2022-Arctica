@@ -93,8 +93,6 @@ namespace Engine.Services
                     //TODO: print out available nodes
                     // gameState.World.Map.AvailableNodes.Where(node => bot.Map.AvailableNodes.Contains(node.Id)).ToList()
 
-                  //  Logger.LogDebug("Test = avalable nodes world map", JsonConvert.SerializeObject(gameState.World.Map.AvailableNodes, Formatting.Indented));
-                 //   Logger.LogDebug("Test = available nodes bot map", JsonConvert.SerializeObject(bot.Map.AvailableNodes, Formatting.Indented));
 
                     botGameState.World = new World()
                     {
@@ -126,17 +124,14 @@ namespace Engine.Services
                             Food = otherBot.Food,
                             Stone = otherBot.Stone,
                             Territory = otherBot.Territory.PositionsInTerritory.ToList(),
-                            Building = otherBot.Buildings,
+                            StatusMultiplier = otherBot.StatusMultiplier,
+                            Buildings = otherBot.Buildings,
                             Wood = otherBot.Wood,
                             Heat = otherBot.Heat,
                             Gold = otherBot.Gold,
                             CurrentTierLevel = otherBot.CurrentTierLevel
                         };
                     }).ToList();
-
-                    //TODO: remove ==================================================
-                  //  Logger.LogDebug("testing - bot state", JsonConvert.SerializeObject(botGameState, Formatting.Indented));
-
 
                     await hubConnection.InvokeAsync("PublishBotState", botGameState);
                 }
@@ -145,7 +140,8 @@ namespace Engine.Services
 
                 await hubConnection.InvokeAsync("PublishGameState", gameStateDto);
 
-               //  Logger.LogData(gameStateDto.ToString());
+                //TODO: Testing
+                //Logger.LogData(JsonConvert.SerializeObject(gameStateDto.Bots.FirstOrDefault().Territory, Formatting.Indented));
 
 
                 Logger.LogDebug("RunLoop", $"Published game state, Time: {stop2.ElapsedMilliseconds}");
@@ -313,6 +309,13 @@ namespace Engine.Services
 
                     var node = worldStateService.GetNode(playAction.TargetNodeId);
 
+                    if (node is null)
+                    {
+                        Logger.LogDebug("Debug", $"Target Node {playAction.TargetNodeId} has been is no longer avaialble ");
+                        return;
+                    }
+
+
                     if (groupedPlayerActions.ContainsKey(node))
                     {
                         groupedPlayerActions[node].Add(playAction);
@@ -338,11 +341,7 @@ namespace Engine.Services
             {
                 var type = groupedPlayerActions[node].First();
 
-                if ((short)node.Type != (short)GameObjectType.AvailableNode)
-                {
-
-                    actionService.HandleCompletedPlayerAction(node, groupedPlayerActions[node], type.ActionType);
-                }
+                actionService.HandleCompletedPlayerAction(node, groupedPlayerActions[node], type.ActionType);
             }
 
 

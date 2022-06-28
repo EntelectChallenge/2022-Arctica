@@ -31,6 +31,8 @@ namespace Engine.Handlers.Actions
             switch (type)
             {
                 case ActionType.Quarry: return true;
+                case ActionType.LumberMill: return true;
+                case ActionType.FarmersGuild: return true;
             }
             return false;
         }
@@ -40,17 +42,26 @@ namespace Engine.Handlers.Actions
         {
             foreach (var playerAction in playerActions)
             {
-
-
                 var bot = playerAction.Bot;
+
+                if (!worldStateService.GetState().World.Map.AvailableNodes.Any(an => playerAction.TargetNodeId == an.Id))
+                {
+                    Logger.LogDebug("Build Action Handler", $"Invalid action {playerAction.TargetNodeId} has already been taken");
+                    return;
+                }
+
+
                 //TODO: add isInTerrotry methods to world state service ...
+
+
+
 
                 Logger.LogInfo("Build Action Handler", "Processing Build Completed Action");
 
                 Position position = worldStateService.ResolveNodePosition(playerAction);
 
                 BuildingConfig buildingConfig = engineConfig.Buildings.FirstOrDefault(x => (short)x.BuildingType == (short)playerAction.ActionType);
-                
+
                 BuildingType buildingType = (BuildingType)playerAction.ActionType;
 
                 //TODO: add to calculation service? 
@@ -71,8 +82,8 @@ namespace Engine.Handlers.Actions
                     return;
                 }
 
-                bot.UpdateBuildingList(playerAction.TargetNodeId, new Building(position, buildingConfig.TerritorySquare, buildingType, buildingConfig.ScoreMultiplier));
-
+                bot.UpdateBuildingList(new Building(position, buildingConfig.TerritorySquare, buildingType, buildingConfig.ScoreMultiplier));
+                bot.RemoveAvaialableNode(playerAction.TargetNodeId);
 
 
                 worldStateService.UpdateTerritory(bot, bot.Territory.PositionsInTerritory.ToList());
@@ -81,7 +92,7 @@ namespace Engine.Handlers.Actions
                 // List<AvailableNode> validAvialableNodes = worldStateService.ValidateTerritoryNode(bot);
 
 
-                 IList<AvailableNode> validAvailableNodes = worldStateService.ValidateAvaialbleNodes(bot);
+                IList<AvailableNode> validAvailableNodes = worldStateService.ValidateAvaialbleNodes(bot);
 
                 worldStateService.AddAvailableNodes(validAvailableNodes.ToList());
                 bot.AddAvailableNodeIds(validAvailableNodes.Select(node => node.Id));

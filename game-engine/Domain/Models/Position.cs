@@ -21,7 +21,7 @@ namespace Domain.Models
         
         protected bool Equals(Position other)
         {
-            return X == other.X && Y == other.Y;
+            return X.Equals(other?.X) && Y.Equals(other?.Y);
         }
 
         public override bool Equals(object obj)
@@ -40,7 +40,7 @@ namespace Domain.Models
 
         public static bool operator == (Position position1, Position position2)
         {
-            return position1 != null && position1.Equals(position2);
+            return !(position1 is null) && position1.Equals(position2);
         }
 
         public static bool operator != (Position position1, Position position2)

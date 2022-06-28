@@ -21,5 +21,7 @@ namespace Domain.Models
             GoldReward = 0;
             HeatReward = 0;
         }
+
+        //TODO: dimishing returns on duplicat buildings
     }
 }

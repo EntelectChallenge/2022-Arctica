@@ -55,6 +55,7 @@ Look forward to buildings, buffs, borders, and bling this round as we start to p
         - [Scout Towers](#scout-towers)
         - [Resource Nodes](#resource-nodes)
         - [Buildings](#buildings)
+          - [Territory](#territory)
     - [Game Tick Payload](#game-tick-payload)
         - [World](#world)
         - [Nodes](#nodes)
@@ -223,10 +224,18 @@ Buildings can be placed almost anywhere on the map, under two conditions:
 2. Buildings can only be placed inside your territory.
 To start off with, each bot has a base/village that has a territory of its own. From here you can expand your territory outwards
 
+#### Building Types
+
+These are the building types that supply the following status buffs:
+
+- Quarry - improves the collection of stone and gold
+- Farmer's guild - improves the collection of food
+- Lumber mill - improves the collection of wood
+
 #### Territory
 Territory is gained on a **first come, first served** basis. This means that territory cannot change once it has been established. The first person to claim a position will be the owner of that position for the rest of the match.
 
-![Territory expanding](images/Expanding Territory.png)
+![Territory expanding](images/expanding-territory.png)
 
 In the image above, there are two bots that are placing buildings (represented as small dark squares), which allow them to expand their territory. Note, the blue territory was placed first, so the yellow territory cannot replace it.
 
@@ -318,7 +327,7 @@ All players will receive the state of the world, all game objects and all player
 
 ```jsonc
 {
-    "world": {                            // world state
+    "world": {                          // world state
         "size": 40,
         "currentTick": 2442,
         "populationTiers": [
@@ -403,14 +412,18 @@ All players will receive the state of the world, all game objects and all player
                 "nodes": [
                     "d04dbdfd-09c6-4f36-83ac-9a6f56ece5a4",
                     "000320f6-36e8-4954-9210-43adc4672d99"
-                ]
+                ],
+                "availableNodes" : [ 
+                  "cafe19f8-029b-4673-beb5-1cc236527d97",
+                  "49d19868-0b20-4bbd-8e00-be818fda0fad"
+                ],
             },
             "population": 2,
             "baseLocation": {
                 "x": 30,
                 "y": 30
             },
-            "pendingActions" : [{
+            "pendingActions" : [ {
               "targetNodeId" : "1e253509-e3a7-4550-850e-dcfaebea96eb",
               "numberOfUnits" : 1,
               "tickActionCompleted" : 2460,
@@ -425,14 +438,40 @@ All players will receive the state of the world, all game objects and all player
               "tickActionStart" : 2445,
               "tickReceived" : 2442,
               "actionType" : 3
-            } //...
-            ],
+            } ],
+            "buildings" : [ {
+              "id" : "73f3af54-3509-4efd-a891-41bbc3de9d73",
+              "gameObjectType" : 1,
+              "position" : {
+                "x" : 10,
+                "y" : 10
+              },
+              "territorySquare" : 1,
+              "type" : 1,
+              "soreMultiplier" : 0
+            } ],
+            "territory" : [ {
+                "x" : 9,
+                "y" : 9
+              }, {
+                "x" : 9,
+                "y" : 10
+              },
+              //... 
+              "statusMultiplier": {
+                "woodReward": 10,
+                "foodReward": 3,
+                "stoneReward": 5,
+                "goldReward": 2,
+                "heatReward": 5
+                },
+              ],
             "availableUnits": 1,
             "seed": 13123,
             "wood": 815,
             "food": 0,
             "stone": 0
-        }
+          }
         //..
     ], 
     "botId": "dfdcda53-d615-432c-b3f7-12ea74a1a72c"
@@ -452,6 +491,7 @@ The order of the data will not change, and is as follows:
     * `id` - id of the scout tower
     * `gameObjectType` - the type of game object. Stored as an enum, in the case of the scout tower it will always be `2 - SCOUT_TOWER`
     * `position` - ( x , y ) position on the map
+    * `availableNodes` - ids of the nodes available to your bot for *building* see - [buildings](#buildings)
 * `botId` - id of the bot
 ---
 ### Nodes
@@ -466,6 +506,7 @@ The order of the data will not change, and is as follows:
   * `WOOD   -   1`
   * `FOOD   -   2`
   * `STONE   -   3`
+  * `GOLD - 4`
 * `amount` - the number of resources available for harvesting on that node
 * `maxUnits` the number of units allowed on that node at any givin point int time
 * `currentUnits` - the number of units on the node at the tick time that the payload was returned
@@ -492,16 +533,25 @@ The `bots` list contains all player bases on the map _will be reviled after scou
   * `targetNodeId` - node where the action is taking place
   * `numberOfUnits` - number of units performing the action
   * `tickActionCompleted` - tick when the action is completed 
-  * `tickActionStart` - tick where the action will be proccesed 
+  * `tickActionStart` - tick where the action will be processed 
   * `tickReceived` - the tick that the action was received  
   * `actionType` - the type of action to be conducted
-* `actions` - actions that are currently 
-  * `targetNodeId` - same as above
-  * `numberOfUnits` - same as above
-  * `tickActionCompleted` - same as above 
-  * `tickActionStart` - same as above 
-  * `tickReceived` - same as above  
-  * `actionType` - same as above
+* `actions` - actions that are currently in progress
+  * `targetNodeId` - same as pendingActions
+  * `numberOfUnits` - same as pendingActions
+  * `tickActionCompleted` - same as pendingActions 
+  * `tickActionStart` - same as pendingActions 
+  * `tickReceived` - same as pendingActions  
+  * `actionType` - same as pendingActions
+* `buildings` - list of placed buildings
+  * `scoreMultiplier` - the amount that a building will increase the amount of resources collected at a time (reward)
+* `territory` - the positions within your territory -  see [Territory](#territory)
+* `statusMultiplier` - stores the increase of resource rewards - only applies to resources in your territory  (place [buildings](#buildings) to increase!)
+  * `woodReward` - increase the amount of **wood** collected 
+  * `foodReward`  - increase the amount of **food** collected 
+  * `stoneReward` - increase the amount of **stone** collected 
+  * `goldReward` - increase the amount of **gold** collected 
+  * `heatReward` - increase the amount of **heat** collected 
 * `availableUnits` - amount of units idle
 * `seed` - seed of the map
 * `wood` - amount of wood reserved
@@ -646,7 +696,7 @@ Example Payload in JSON with types:
     "id" : "60b71170-bbe3-4cfa-8069-87202340fc9f    " // destination node - string/UUID/GUID
 }
 ```
-
+---
 ### Command: START_CAMPFIRE
 
 ```
@@ -664,8 +714,59 @@ Example Payload in JSON with types:
     "id" : "00000000-0000-0000-0000-000000000000" // destination node - string/UUID/GUID
 }
 ```
-
+---
 ### Command: QUARRY
+
+```
+QUARRY: 6
+```
+
+This command will send the amount of specified units to build a quarry, 
+
+Example Payload in JSON with types:
+```jsonc
+{
+    "type" : 6,                                   // BUILDING action type - int
+    "units" : 2,                                  // number of units to travel to node- int
+    "id" : "60b71170-bbe3-4cfa-8069-87202340fc9f    " // destination node - string/UUID/GUID
+}
+```
+
+---
+### Command: FARMERS_GUILD
+
+```
+FARMERS_GUILD: 7
+```
+
+This command will send the amount of specified units to build a farmer's guild, 
+
+Example Payload in JSON with types:
+```jsonc
+{
+    "type" : 7,                                   // BUILDING action type - int
+    "units" : 2,                                  // number of units to travel to node- int
+    "id" : "60b71170-bbe3-4cfa-8069-87202340fc9f    " // destination node - string/UUID/GUID
+}
+```
+
+---
+### Command: LUMBER_MILL
+
+```
+LUMBER_MILL: 8
+```
+
+This command will send the amount of specified units to build a lumber mill, 
+
+Example Payload in JSON with types:
+```jsonc
+{
+    "type" : 8,                                   // BUILDING action type - int
+    "units" : 2,                                  // number of units to travel to node- int
+    "id" : "60b71170-bbe3-4cfa-8069-87202340fc9f    " // destination node - string/UUID/GUID
+}
+```
 
 ---
 ## Inter tick calculations

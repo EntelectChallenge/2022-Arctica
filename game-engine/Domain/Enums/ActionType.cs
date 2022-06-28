@@ -9,6 +9,8 @@
         Lumber = 4,
         StartCampfire = 5,
         //Buldings:
-        Quarry = 6
+        Quarry = 6,
+        FarmersGuild = 7,
+        LumberMill = 8
     }
 }

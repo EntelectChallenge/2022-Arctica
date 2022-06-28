@@ -124,24 +124,27 @@ namespace Engine.Services
         public void AddAvailableNodes(List<AvailableNode> buildingNodes)
         {
             state.World.Map.AvailableNodes.AddRange(buildingNodes);
+
         }
 
         public BotObject CreateBotObject(Guid id)
         {
-            Territory territory = new Territory();
             //state.World.Map.GetTerritories().Add(id, territory);
+
+            //  state.World.Map.ScoutTowers.Select(st => st.);
 
             BuildingConfig buildingConfig = engineConfig.Buildings.FirstOrDefault(x => x.BuildingType.Equals(BuildingType.Base));
 
             //Change this  buildingConfig.BuildingType
             BuildingObject baseBuilding = new BuildingObject(GetNextBotPosition(), buildingConfig.TerritorySquare, BuildingType.Base, buildingConfig.ScoreMultiplier);
 
+            //Clear position 
+            positionsInUse.Remove(baseBuilding.Position);
+
             var bot = new BotObject
             (
                 id,
                 0,
-                territory,
-                new List<BuildingObject>() { baseBuilding },
                 engineConfig.StartingFood,
                 engineConfig.StartingUnits,
                 engineConfig.StartingUnits,
@@ -149,31 +152,39 @@ namespace Engine.Services
             )
             {
                 Wood = 50,
-                Gold = 50,
+                Gold = 35,
                 Stone = 50,
                 Food = 50,
                 Heat = 50
             };
 
             state.Bots.Add(bot);
-            Logger.LogDebug("WorldGen", $"Adding Bot {id} at position x: {bot.Buildings.First().Position.X}, " +
-                $"y: {bot.Buildings.First().Position.Y}");
+            /*            Logger.LogDebug("WorldGen", $"Adding Bot {id} at position x: {bot.Buildings.First().Position.X}, " +
+                            $"y: {bot.Buildings.First().Position.Y}");*/
+
+            bot.UpdateBuildingList(baseBuilding);
 
             var validAvaialableNodes = ValidateAvaialbleNodes(bot);
 
-
-            //TODO: remove this !
-            Logger.LogDebug("TerritoryNodes", "valid nodes added");
-            Logger.LogDebug("TerritoryNodes", JsonConvert.SerializeObject(validAvaialableNodes, Formatting.Indented));
+            var baseId = validAvaialableNodes.FirstOrDefault(van => van.Position == baseBuilding.Position).Id;
+            /*
+                        //TODO: remove this !
+                        Logger.LogDebug("TerritoryNodes", "valid nodes added");
+                        Logger.LogDebug("TerritoryNodes", JsonConvert.SerializeObject(validAvaialableNodes, Formatting.Indented));*/
 
             AddAvailableNodes(validAvaialableNodes.ToList());
-            Logger.LogDebug("Test = AddAvailableNodes =============================================================================", JsonConvert.SerializeObject(validAvaialableNodes.ToList(), Formatting.Indented));
 
+            /*          Logger.LogDebug("Test = AddAvailableNodes =============================================================================", JsonConvert.SerializeObject(validAvaialableNodes.ToList(), Formatting.Indented));
+          */
             //Add avialble node ids to the player bot
 
             bot.AddAvailableNodeIds(validAvaialableNodes.Select(node => node.Id));
-            Logger.LogDebug("Test = AddAvailableNodes on bot =============================================================================",
-                JsonConvert.SerializeObject(bot.Map.AvailableNodes.ToList(), Formatting.Indented));
+            UpdateTerritory(bot, bot.Territory.PositionsInTerritory.ToList());
+
+            bot.RemoveAvaialableNode(baseId);
+
+            /*           Logger.LogDebug("Test = AddAvailableNodes on bot =============================================================================",
+                           JsonConvert.SerializeObject(bot.Map.AvailableNodes.ToList(), Formatting.Indented));*/
 
             return bot;
         }
@@ -233,13 +244,14 @@ namespace Engine.Services
             return state.World.Map.ResolveAvailableNode(id);
         }
 
-
+        //Territory positions for the Bot and the ScoutTower are updated
         public void UpdateTerritory(BotObject bot, List<Position> newTerritoryNodes)
         {
             //      state.World.Map.ScoutTowers.ForEach(scoutTower => territory.PositionsInTerritory.Union());
 
             foreach (var position in newTerritoryNodes)
             {
+                //TODO: does this need to be here? Because the territory posistions are already updated in bot.UpdateBuildingList
                 bot.Territory.AddPosition(position);
 
                 var st = GetScoutTowerByRegion(state.World.Map.ScoutTowers, position);
@@ -301,6 +313,8 @@ namespace Engine.Services
                 case ActionType.Lumber:
                     return GetResourceNode(playerAction.TargetNodeId);
                 case ActionType.Quarry:
+                case ActionType.LumberMill:
+                case ActionType.FarmersGuild:
                     return GetAvailableNode(playerAction.Bot, playerAction.TargetNodeId);
                 case ActionType.Error:
                 default:
@@ -308,12 +322,13 @@ namespace Engine.Services
             }
         }
 
-        //TODO: see if I can remove this
         public Position ResolveNodePosition(PlayerAction playerAction)
         {
             switch (playerAction.ActionType)
             {
                 case ActionType.Quarry:
+                case ActionType.LumberMill:
+                case ActionType.FarmersGuild:
                     return GetAvailableNode(playerAction.Bot, playerAction.TargetNodeId).Position;
                 case ActionType.Error:
                 default:

@@ -7,10 +7,10 @@ namespace Domain.Models
     public class ScoutTower : GameObject
     {
         public IList<Guid> Nodes { get; set; }
-        
+
         public Dictionary<Guid, Territory> TerritoryNodes { get; set; }
-        public int XRegion {get; set;}
-        public int YRegion {get; set;}  
+        public int XRegion { get; set; }
+        public int YRegion { get; set; }
 
         public ScoutTower(Position position) : base(GameObjectType.ScoutTower, position)
         {
@@ -20,8 +20,9 @@ namespace Domain.Models
 
         public void AddTerritoryNode(Guid botId, Position position)
         {
-            if(TerritoryNodes[botId] == null)
+            if (TerritoryNodes.Count == 0 || !(TerritoryNodes.ContainsKey(botId)))
             {
+                Console.WriteLine($"Territory does not exist for {botId}, creating ");
                 TerritoryNodes[botId] = new Territory();
             }
 

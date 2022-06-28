@@ -167,7 +167,6 @@ namespace Engine.Services
 
         public int CalculateAmountExtracted(ResourceNode node, PlayerAction action)
         {
-            // These can be altered with affects from buildings
             if (action.ActionType == ActionType.StartCampfire)
             {
                 var reward = randomGenerator.Next(
@@ -188,13 +187,15 @@ namespace Engine.Services
             };
         }
 
+        //Apply buffs to buildings in territoy 
         private int ApplyStatusMuliplier(ResourceNode node, PlayerAction action, int statusMultipler)
         {
-            var isIntTerritory = IsInTerritory(node, action);
+            var isInTerritory = IsInTerritory(node, action);
 
-            return node.Reward + (isIntTerritory ? statusMultipler : 0);
+            return node.Reward + (isInTerritory ? statusMultipler : 0);
         }
 
+        //Verify if building is in territory 
         private bool IsInTerritory(ResourceNode resourceNode, PlayerAction action)
         {
             return action.Bot.Territory.Contains(resourceNode.Position);
@@ -222,6 +223,7 @@ namespace Engine.Services
                 bot.Wood * engineConfig.ResourceScoreMultiplier.Wood +
                 bot.Stone * engineConfig.ResourceScoreMultiplier.Stone +
                 bot.Food * engineConfig.ResourceScoreMultiplier.Food +
+                bot.Gold * engineConfig.ResourceScoreMultiplier.Gold +
                 bot.Buildings.Sum(building => building.ScoreMultiplier);
             return score;
         }
