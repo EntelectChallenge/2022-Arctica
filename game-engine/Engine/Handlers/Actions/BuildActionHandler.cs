@@ -116,7 +116,7 @@ namespace Engine.Handlers.Actions
 
         private static bool IsNegative(int amount)
         {
-            return amount < -1;
+            return amount < 0;
 
         }
     }
