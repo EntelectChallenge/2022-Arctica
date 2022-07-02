@@ -13,6 +13,7 @@ namespace Engine.Interfaces
         public int CalculateFoodUpkeep(BotObject bot);
         public int CalculateWoodUpkeep(BotObject bot);
         public int CalculateStoneUpkeep(BotObject bot);
+        public int CalculateGoldUpkeep(BotObject bot);
         public int CalculateHeatUpkeep(BotObject bot);
         public int GetPopulationChange(BotObject bot);
         public int GetScore(BotObject bot);
