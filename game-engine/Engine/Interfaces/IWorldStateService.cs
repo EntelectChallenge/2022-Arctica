@@ -22,6 +22,7 @@ namespace Engine.Interfaces
         int GetCurrentTick();
         IEnumerable<Guid> GetScoutTowerInformation(Guid id);
         string GetWorldState();
+        ISet<Position> GetClaimedTerritory();
         ISet<Position> GetPositionsInUse();
         void AddPositionInUse(Position position);
         void UpdateTerritory(BotObject bot, List<Position> newTerritoryNodes);

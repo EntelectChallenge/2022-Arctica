@@ -64,11 +64,11 @@ namespace Domain.Models
             return Buildings.FirstOrDefault(x => x.Type == BuildingType.Base).Position;
         }
 
-        public void UpdateBuildingList(BuildingObject building)
+        public void UpdateBuildingList(BuildingObject building, ISet<Position> claimedTerritory)
         {
             Buildings.Add(building);
 
-            Territory.AddBuilding(building);
+            Territory.AddBuilding(building, claimedTerritory);
 
             //TODO: remove 
             //AvailableNode availableNode = Map.AvailableNodes.FirstOrDefault(n => n.Id == availableNodeId);

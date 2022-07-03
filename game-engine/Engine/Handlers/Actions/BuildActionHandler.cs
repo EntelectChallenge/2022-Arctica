@@ -82,9 +82,8 @@ namespace Engine.Handlers.Actions
                     return;
                 }
 
-                bot.UpdateBuildingList(new Building(position, buildingConfig.TerritorySquare, buildingType, buildingConfig.ScoreMultiplier));
+                bot.UpdateBuildingList(new Building(position, buildingConfig.TerritorySquare, buildingType, buildingConfig.ScoreMultiplier), worldStateService.GetClaimedTerritory());
                 bot.RemoveAvaialableNode(playerAction.TargetNodeId);
-
 
                 worldStateService.UpdateTerritory(bot, bot.Territory.PositionsInTerritory.ToList());
                 worldStateService.AddPositionInUse(position);
