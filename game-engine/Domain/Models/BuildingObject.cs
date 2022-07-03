@@ -35,9 +35,12 @@ namespace Domain.Models
             var xSet = GenerateDimensionSubset(Position.X, TerritorySquare);
             var ySet = GenerateDimensionSubset(Position.Y, TerritorySquare);
 
+            // TODO the max region size should be read from config
             var positions =
                 from x in xSet
+                where (0 <= x) && (x < 40)
                 from y in ySet
+                where (0 <= y) && (y < 40)
                 select new Position() { X = x, Y = y };
 
             return positions;
