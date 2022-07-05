@@ -14,10 +14,10 @@ public class Territory
         return PositionsInTerritory.Add(position);
     }
 
-    public void AddBuilding(BuildingObject building)
+    public void AddBuilding(BuildingObject building, ISet<Position> claimedPositions)
     {
         var buildingTerritory = building.GetPositionsInBuildingRadius();
-        PositionsInTerritory.UnionWith(buildingTerritory);
+        PositionsInTerritory.UnionWith(buildingTerritory.Except(claimedPositions));
     }
     
     public bool Contains(Position position)

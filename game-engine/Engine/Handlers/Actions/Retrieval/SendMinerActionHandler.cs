@@ -58,7 +58,7 @@ namespace Engine.Handlers.Actions.Retrieval
                     resourceDistributed = resourceDistributed.NeverMoreThan(maxResourceDistributed);
 
                     Logger.LogInfo("Miner Action Handler",
-                        $"Bot {playerAction.Bot.BotId} received {resourceDistributed} amount of gold");
+                        $"Bot {playerAction.Bot.BotId} received {resourceDistributed} amount of stone");
 
                     playerAction.Bot.Stone += resourceDistributed;
                 }

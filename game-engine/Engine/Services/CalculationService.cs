@@ -39,6 +39,11 @@ namespace Engine.Services
             return (int)Math.Ceiling(engineConfig.UnitConsumptionRatio.Stone);
         }
 
+        private int GetGoldConsumption(BotObject bot)
+        {
+            return (int)Math.Ceiling(engineConfig.UnitConsumptionRatio.Gold);
+        }
+
         private int GetHeatConsumption(BotObject bot)
         {
             return (int)Math.Ceiling(bot.GetPopulation() * engineConfig.UnitConsumptionRatio.Heat);
@@ -63,6 +68,13 @@ namespace Engine.Services
             return bot.Stone >= GetStoneConsumption(bot)
                 ? GetStoneConsumption(bot)
                 : bot.Stone;
+        }
+
+        public int CalculateGoldUpkeep(BotObject bot)
+        {
+            return bot.Gold >= GetGoldConsumption(bot)
+                ? GetGoldConsumption(bot)
+                : bot.Gold;
         }
 
         public int CalculateHeatUpkeep(BotObject bot)

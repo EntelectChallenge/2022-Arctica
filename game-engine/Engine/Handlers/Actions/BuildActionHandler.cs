@@ -64,13 +64,20 @@ namespace Engine.Handlers.Actions
 
                 BuildingType buildingType = (BuildingType)playerAction.ActionType;
 
+                BuildingObject newBuilding = new Building(
+                    position,
+                    buildingConfig.TerritorySquare,
+                    buildingType,
+                    buildingConfig.ScoreMultiplier);
+
+
                 //TODO: add to calculation service? 
 
                 var w = bot.Wood;
                 var g = bot.Gold;
                 var s = bot.Stone;
 
-                ApplyBuildingCosts(bot, buildingConfig);
+                ApplyBuildingCosts(bot, buildingConfig, buildingType);
 
                 if (IsNegative(bot.Wood) ||
                    IsNegative(bot.Gold) ||
@@ -82,7 +89,9 @@ namespace Engine.Handlers.Actions
                     return;
                 }
 
-                bot.UpdateBuildingList(new Building(position, buildingConfig.TerritorySquare, buildingType, buildingConfig.ScoreMultiplier));
+                //Add the increase cost logic here
+                bot.UpdateBuildingList(newBuilding, worldStateService.GetClaimedTerritory());
+
                 bot.RemoveAvaialableNode(playerAction.TargetNodeId);
 
 
@@ -105,18 +114,29 @@ namespace Engine.Handlers.Actions
             }
         }
 
+
         //TODO: move to bot object?
-        private static void ApplyBuildingCosts(BotObject bot, BuildingConfig config)
+        private static void ApplyBuildingCosts(BotObject bot, BuildingConfig buildingConfig, BuildingType buildingType)
         {
-            bot.Wood -= config.Cost.Wood;
-            bot.Gold -= config.Cost.Gold;
-            bot.Stone -= config.Cost.Stone;
+            var buildingCount = GetBuildingsByType(bot, buildingType);
+
+            var woodCost = GetBuildingCost(buildingCount, buildingConfig.Cost.Wood);
+            var goldCost = GetBuildingCost(buildingCount, buildingConfig.Cost.Gold);
+            var stoneCost = GetBuildingCost(buildingCount, buildingConfig.Cost.Stone);
+
+            bot.Wood -= buildingConfig.Cost.Wood + woodCost;
+            bot.Gold -= buildingConfig.Cost.Gold + goldCost;
+            bot.Stone -= buildingConfig.Cost.Stone + stoneCost;
         }
 
+        private static int GetBuildingsByType(BotObject bot, BuildingType buildingType) => bot.Buildings.Count(building => (short)building.Type == (short)buildingType);
+
+
+        private static int GetBuildingCost(int numberOfBuildingsPerType, int cost) => (numberOfBuildingsPerType * cost) / 2;
 
         private static bool IsNegative(int amount)
         {
-            return amount < -1;
+            return amount < 0;
 
         }
     }

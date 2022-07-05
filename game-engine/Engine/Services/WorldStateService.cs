@@ -19,6 +19,7 @@ namespace Engine.Services
         private List<Position> presetBotLocations;
         private readonly EngineConfig engineConfig;
         private readonly ISet<Position> positionsInUse = new HashSet<Position>();
+        private readonly ISet<Position> claimedTerritory = new HashSet<Position>();
         private readonly ISet<Position> botPositionsInUse = new HashSet<Position>();
         private readonly ISet<Position> farmPositionsInUse = new HashSet<Position>();
         private readonly ISet<Position> woodPositionsInUse = new HashSet<Position>();
@@ -80,6 +81,11 @@ namespace Engine.Services
             return state.Bots.Find(c => c.BotId == botId);
         }
 
+        public ISet<Position> GetClaimedTerritory()
+        {
+            return claimedTerritory;
+        }
+
         public ISet<Position> GetPositionsInUse()
         {
             return positionsInUse;
@@ -138,7 +144,7 @@ namespace Engine.Services
             //Change this  buildingConfig.BuildingType
             BuildingObject baseBuilding = new BuildingObject(GetNextBotPosition(), buildingConfig.TerritorySquare, BuildingType.Base, buildingConfig.ScoreMultiplier);
 
-            //Clear position 
+            //Clear position
             positionsInUse.Remove(baseBuilding.Position);
 
             var bot = new BotObject
@@ -162,7 +168,7 @@ namespace Engine.Services
             /*            Logger.LogDebug("WorldGen", $"Adding Bot {id} at position x: {bot.Buildings.First().Position.X}, " +
                             $"y: {bot.Buildings.First().Position.Y}");*/
 
-            bot.UpdateBuildingList(baseBuilding);
+            bot.UpdateBuildingList(baseBuilding, GetClaimedTerritory());
 
             var validAvaialableNodes = ValidateAvaialbleNodes(bot);
 
@@ -253,6 +259,7 @@ namespace Engine.Services
             {
                 //TODO: does this need to be here? Because the territory posistions are already updated in bot.UpdateBuildingList
                 bot.Territory.AddPosition(position);
+                claimedTerritory.Add(position);
 
                 var st = GetScoutTowerByRegion(state.World.Map.ScoutTowers, position);
 

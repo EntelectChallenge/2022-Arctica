@@ -21,6 +21,7 @@ namespace Domain.Models
             TerritorySquare = territorySquare;
             Type = buildingType;
             ScoreMultiplier = scoreMultiplier;
+
         }
 
         private IEnumerable<int> GenerateDimensionSubset(int centre, int size)
@@ -35,9 +36,13 @@ namespace Domain.Models
             var xSet = GenerateDimensionSubset(Position.X, TerritorySquare);
             var ySet = GenerateDimensionSubset(Position.Y, TerritorySquare);
 
+            // TODO the map size should be read from config
+            var mapSize = 40;
             var positions =
                 from x in xSet
+                where (0 <= x) && (x < mapSize)
                 from y in ySet
+                where (0 <= y) && (y < mapSize)
                 select new Position() { X = x, Y = y };
 
             return positions;
