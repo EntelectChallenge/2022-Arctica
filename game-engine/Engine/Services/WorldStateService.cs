@@ -395,7 +395,7 @@ namespace Engine.Services
                 };
                 count++;
 
-                if (positionsInUse.All(pos => pos != position))
+                if (positionsInUse.ToList().All(pos => pos != position))
                 {
                     if (minDistance > 0 && proximityPositions.Any(pos => InRadiusRange(position, pos, minDistance)))
                     {
