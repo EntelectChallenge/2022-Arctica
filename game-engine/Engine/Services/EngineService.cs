@@ -312,7 +312,7 @@ namespace Engine.Services
                     if (node is null)
                     {
                         Logger.LogDebug("Debug", $"Target Node {playAction.TargetNodeId} has been is no longer avaialble ");
-                        return;
+                        continue;
                     }
 
 
