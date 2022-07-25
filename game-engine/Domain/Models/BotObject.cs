@@ -64,14 +64,15 @@ namespace Domain.Models
             return Buildings.FirstOrDefault(x => x.Type == BuildingType.Base).Position;
         }
 
-        public void UpdateBuildingList(BuildingObject building)
+        public void UpdateBuildingList(BuildingObject building, ISet<Position> claimedTerritory)
         {
             Buildings.Add(building);
 
-            Territory.AddBuilding(building);
+            Territory.AddBuilding(building, claimedTerritory);
 
-            //TODO: remove 
-            //AvailableNode availableNode = Map.AvailableNodes.FirstOrDefault(n => n.Id == availableNodeId);
+
+            
+
 
         }
 
@@ -147,6 +148,8 @@ namespace Domain.Models
                 case ActionType.Quarry:
                 case ActionType.FarmersGuild:
                 case ActionType.LumberMill:
+                case ActionType.OutPost:
+                case ActionType.Road:
                     //Should we force players to send a sertin number of builders at a time OR will the number of units sent effect the build duration
                     playerAction.NumberOfUnits = playerAction.NumberOfUnits >= 1 ? 1 : playerAction.NumberOfUnits;
 
@@ -172,8 +175,11 @@ namespace Domain.Models
 
         public List<PlayerAction> GetActions()
         {
-            Actions.AddRange(PendingActions);
-            PendingActions.Clear();
+            lock (PendingActions)
+            {
+                Actions.AddRange(PendingActions);
+                PendingActions.Clear();
+            }
             return Actions;
         }
 

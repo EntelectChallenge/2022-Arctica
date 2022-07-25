@@ -106,6 +106,8 @@ namespace Engine.Services
                 ActionType.Quarry => resourceType == ResourceType.Available,
                 ActionType.FarmersGuild => resourceType == ResourceType.Available,
                 ActionType.LumberMill => resourceType == ResourceType.Available,
+                ActionType.OutPost => resourceType == ResourceType.Available, 
+                ActionType.Road => resourceType == ResourceType.Available,
                 // ActionType.anotherBuilding => true,
                 // ActionType.anotherBuilding => true,
                 ActionType.Mine => ((resourceType == ResourceType.Stone) || (resourceType == ResourceType.Gold)),

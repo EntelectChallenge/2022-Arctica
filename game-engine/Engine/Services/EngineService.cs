@@ -216,6 +216,7 @@ namespace Engine.Services
                     bot.Food -= calculationService.CalculateFoodUpkeep(bot);
                     bot.Wood -= calculationService.CalculateWoodUpkeep(bot);
                     bot.Stone -= calculationService.CalculateStoneUpkeep(bot);
+                    bot.Gold -= calculationService.CalculateGoldUpkeep(bot);
                     bot.Heat -= calculationService.CalculateHeatUpkeep(bot);
 
                     var populationChange = calculationService.GetPopulationChange(bot);
@@ -235,12 +236,11 @@ namespace Engine.Services
                                 tier.Level == bot.CurrentTierLevel + 1);
                         if (nextTier != default)
                         {
-                            // TODO: Set gold
                             if (
                                 bot.Population >= currentPopulationTier.MaxPopulation &&
                                 bot.Food >= nextTier.TierResourceConstraints.Food &&
                                 bot.Stone >= nextTier.TierResourceConstraints.Stone &&
-                                //bot.Gold >= nextTier.TierResourceConstraints.Gold &&
+                                bot.Gold >= nextTier.TierResourceConstraints.Gold &&
                                 bot.Wood >= nextTier.TierResourceConstraints.Wood
                             )
                             {

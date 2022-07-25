@@ -15,7 +15,7 @@ Hello traveller 😊
 
 You look weary.
 
-I know it’s cold, why don’t you set up camp?
+I know it’s cold, why don’t you set up camp?🔥
 
 You’re not the only one around these parts - I’ve seen a few others looking for shelter recently...
 
@@ -40,10 +40,14 @@ Traveller, have you seen? Over the hills there are a few more villages that are 
 It seems like there might be some competition for the land and resources in these parts. It may be worthwhile to start expanding your territory to ensure that you are able to maintain control over those precious resources!
 It will likely benefit you in the long term!
 
+** one eternity later **
+
+Traveller! Times have changed - there is very little left to explore, it is now imperative that you use your available buildings to more effectively control your territory. 
+Shhhhh 🤫 they are approaching fast - they come for our land...
 
 ---
 
-## UPDATE: Phase 2 is out!!
+## UPDATE: Phase 3 part 1 is out!!
 This new release contains lots of exciting stuff to add to the real-time-strategy carnage.  
 Look forward to buildings, buffs, borders, and bling this round as we start to play with creating buildings and expanding territory. 
 
@@ -70,6 +74,9 @@ Look forward to buildings, buffs, borders, and bling this round as we start to p
         - [Command: LUMBER](#command-lumber)
         - [Command: START_CAMPFIRE](#command-start_campfire)
         - [Command: QUARRY](#command-quarry)
+        - [Command: OUTPOST](#command-outpost)
+        - [Command: ROAD](#command-road)
+       
     - [Inter tick calculations](#inter-tick-calculations)
       - [Travel time](#travel-time)
       - [population tiers](#population-tiers)
@@ -767,6 +774,41 @@ Example Payload in JSON with types:
     "id" : "60b71170-bbe3-4cfa-8069-87202340fc9f    " // destination node - string/UUID/GUID
 }
 ```
+---
+### Command: OUTPOST
+
+```
+OUTPOST: 9 
+```
+
+This command will send the amount of specified units to build an outpost, 
+
+Example Payload in JSON with types:
+```jsonc
+{
+    "type" : 8,                                   // BUILDING action type - int
+    "units" : 2,                                  // number of units to travel to node- int
+    "id" : "60b71170-bbe3-4cfa-8069-87202340fc9f    " // destination node - string/UUID/GUID
+}
+```
+---
+### Command: ROAD
+
+```
+ROAD: 10
+```
+
+This command will send the amount of specified units to build a road, 
+
+Example Payload in JSON with types:
+```jsonc
+{
+    "type" : 8,                                   // BUILDING action type - int
+    "units" : 2,                                  // number of units to travel to node- int
+    "id" : "60b71170-bbe3-4cfa-8069-87202340fc9f    " // destination node - string/UUID/GUID
+}
+```
+
 
 ---
 ## Inter tick calculations
