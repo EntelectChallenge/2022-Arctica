@@ -186,6 +186,55 @@ namespace Engine.Services
             Logger.LogInfo("RunLoop", "======================================================================");
             Logger.LogInfo("RunLoop", "Tick: " + worldStateService.GetCurrentTick());
 
+            // update resource nodes available units and re-distribute
+            // available slots if the node was over-allocated
+
+            // get all the bot actions that were received on this tick
+            var newActions = new List<PlayerAction>();
+            foreach (var bot in bots) {
+                foreach (var action in bot.GetActions()) {
+                    if (action.TickReceived == worldStateService.GetCurrentTick()) {
+                        newActions.Add(action);
+                    }
+                }
+            }
+
+            foreach (var node in worldStateService.GetState().World.Map.Nodes) {
+                // find all the new player actions that reference this node and
+                // calculate the total amount of units
+                int total = 0;
+                var nodeActions = new List<PlayerAction>();
+                foreach (var action in newActions) {
+                    if (action.TargetNodeId == node.Id) {
+                        total += action.NumberOfUnits;
+                        nodeActions.Add(action);
+                    }
+                }
+
+
+                // if there are more units allocated to the node than the
+                // available amount, cap each player according to their share
+                // of the available space
+                var available = node.MaxUnits - node.CurrentUnits;
+                if (total > available) {
+                    Logger.LogDebug("RunLoop", "Node " + node.Id + " over-allocated, re-distributing");
+
+                    foreach (var action in nodeActions) {
+                        var newUnits = (int)((double)action.NumberOfUnits / total * available);
+                        // add back the removed units to the bot's available
+                        // pool and set the action's new amount of units
+                        action.Bot.AvailableUnits += action.NumberOfUnits - newUnits;
+                        action.NumberOfUnits = newUnits;
+                    }
+                }
+
+                // update the node's current units
+                foreach (var action in nodeActions) {
+                    node.CurrentUnits += action.NumberOfUnits;
+                }
+            }
+
+
             SimulateTickForBots(bots);
             // TODO: maybe refactor the below into a method for better readability
             // =======================
@@ -205,7 +254,6 @@ namespace Engine.Services
                 }
             }
             // =======================
-
             if (worldStateService.GetCurrentTick() % engineConfig.ProcessTick == 0 &&
                 worldStateService.GetCurrentTick() != 0)
             {

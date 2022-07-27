@@ -143,7 +143,10 @@ namespace Domain.Models
                     if (unitsToWork <= 0) return;
 
                     playerAction.NumberOfUnits = unitsToWork;
-                    node.CurrentUnits += unitsToWork;
+                    // NOTE instead of updating the node units here it gets updated in
+                    // the EngineService.ProcessGameTick so that available slots get
+                    // distributed fairly
+                    // node.CurrentUnits += unitsToWork;
                     break;
                 case ActionType.Quarry:
                 case ActionType.FarmersGuild:
