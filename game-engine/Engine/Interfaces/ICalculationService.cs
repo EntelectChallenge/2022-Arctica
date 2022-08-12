@@ -25,5 +25,6 @@ namespace Engine.Interfaces
         public PopulationTier GetBotPopulationTier(BotObject bot);
         public double CalculateDistributionFactor(int calculatedTotalAmount, int totalUnitsAtResource);
         public int CalculateAmountUsed(PlayerAction playerAction);
+        public double CalculateDistance(Position a, Position b);
     }
 }

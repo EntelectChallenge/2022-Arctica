@@ -51,7 +51,8 @@ namespace EngineTests.HandlerTests
             var numberOfUnits = 2;
             PlayerAction action = FakeGameObjectProvider.GetStartCampfireAction(bot, Guid.Empty, numberOfUnits, 1);
 
-            bot.AddAction(action, null);
+            ActionService.AddAction(bot, action, null);
+            
             bot.Wood = numberOfUnits * EngineConfigFake.Value.ResourceGenerationConfig.Campfire.RewardRange[0];
      
             startCampfireActionHandler.ProcessActionComplete(null, bot.GetActions());

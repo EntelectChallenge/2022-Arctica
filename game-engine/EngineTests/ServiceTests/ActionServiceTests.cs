@@ -13,20 +13,10 @@ namespace EngineTests.ServiceTests
     [TestFixture]
     public class ActionServiceTests : TestBase
     {
-        private ActionService actionService;
-        private IActionHandlerResolver actionHandlerResolver;
-        private List<IActionHandler> actionHandlers;
-
         [SetUp]
         public new void Setup()
         {
             base.Setup();
-            actionHandlers = new List<IActionHandler>
-             {
-                 new SendScoutActionHandler(WorldStateService, EngineConfigFake)
-             };
-            actionHandlerResolver = new ActionHandlerResolver(actionHandlers);
-            actionService = new ActionService(WorldStateService, actionHandlerResolver, CalculationService, EngineConfigFake);
         }
 
         [Test]
@@ -37,7 +27,7 @@ namespace EngineTests.ServiceTests
             /*bot.AddAction(null);*/
 
 
-            Assert.DoesNotThrow(() => actionService.PushPlayerAction(bot.BotId, emptyAction));
+            Assert.DoesNotThrow(() => ActionService.PushPlayerAction(bot.BotId, emptyAction));
         }
 
         //TODO: Are we using the oldest action or the newest valid action?

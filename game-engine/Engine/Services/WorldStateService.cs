@@ -9,8 +9,6 @@ using Domain.Services;
 using Engine.Interfaces;
 using Engine.Models;
 using Newtonsoft.Json;
-using BuildingObject = Domain.Models.BuildingObject;
-using BuildingConfig = Domain.Configs.Building;
 
 namespace Engine.Services
 {
@@ -19,13 +17,14 @@ namespace Engine.Services
         private List<Position> presetBotLocations;
         private readonly EngineConfig engineConfig;
         private readonly ISet<Position> positionsInUse = new HashSet<Position>();
-        private readonly ISet<Position> claimedTerritory = new HashSet<Position>();
         private readonly ISet<Position> botPositionsInUse = new HashSet<Position>();
         private readonly ISet<Position> farmPositionsInUse = new HashSet<Position>();
         private readonly ISet<Position> woodPositionsInUse = new HashSet<Position>();
         private readonly ISet<Position> stonePositionsInUse = new HashSet<Position>();
         private readonly ISet<Position> goldPositionsInUse = new HashSet<Position>();
         private readonly ISet<Position> scoutTowersPositionsInUse = new HashSet<Position>();
+
+        private readonly Dictionary<Position, Node> NodesByPosition = new Dictionary<Position, Node>();
 
         private readonly GameState state = new()
         {
@@ -81,11 +80,6 @@ namespace Engine.Services
             return state.Bots.Find(c => c.BotId == botId);
         }
 
-        public ISet<Position> GetClaimedTerritory()
-        {
-            return claimedTerritory;
-        }
-
         public ISet<Position> GetPositionsInUse()
         {
             return positionsInUse;
@@ -130,95 +124,10 @@ namespace Engine.Services
         public void AddAvailableNodes(List<AvailableNode> buildingNodes)
         {
             state.World.Map.AvailableNodes.AddRange(buildingNodes);
-
+            buildingNodes.ForEach(node => NodesByPosition[node.Position] = node);
         }
-
-        public BotObject CreateBotObject(Guid id)
-        {
-            //state.World.Map.GetTerritories().Add(id, territory);
-
-            //  state.World.Map.ScoutTowers.Select(st => st.);
-
-            BuildingConfig buildingConfig = engineConfig.Buildings.FirstOrDefault(x => x.BuildingType.Equals(BuildingType.Base));
-
-            //Change this  buildingConfig.BuildingType
-            BuildingObject baseBuilding = new BuildingObject(GetNextBotPosition(), buildingConfig.TerritorySquare, BuildingType.Base, buildingConfig.ScoreMultiplier);
-
-            //Clear position
-            positionsInUse.Remove(baseBuilding.Position);
-
-            var bot = new BotObject
-            (
-                id,
-                0,
-                engineConfig.StartingFood,
-                engineConfig.StartingUnits,
-                engineConfig.StartingUnits,
-                engineConfig.Seeds.PlayerSeeds[state.Bots.Count]
-            )
-            {
-                Wood = 50,
-                Gold = 35,
-                Stone = 50,
-                Food = 50,
-                Heat = 50
-            };
-
-            state.Bots.Add(bot);
-            /*            Logger.LogDebug("WorldGen", $"Adding Bot {id} at position x: {bot.Buildings.First().Position.X}, " +
-                            $"y: {bot.Buildings.First().Position.Y}");*/
-
-            bot.UpdateBuildingList(baseBuilding, GetClaimedTerritory());
-
-            var validAvaialableNodes = ValidateAvaialbleNodes(bot);
-
-            var baseId = validAvaialableNodes.FirstOrDefault(van => van.Position == baseBuilding.Position).Id;
-            /*
-                        //TODO: remove this !
-                        Logger.LogDebug("TerritoryNodes", "valid nodes added");
-                        Logger.LogDebug("TerritoryNodes", JsonConvert.SerializeObject(validAvaialableNodes, Formatting.Indented));*/
-
-            AddAvailableNodes(validAvaialableNodes.ToList());
-
-            /*          Logger.LogDebug("Test = AddAvailableNodes =============================================================================", JsonConvert.SerializeObject(validAvaialableNodes.ToList(), Formatting.Indented));
-          */
-            //Add avialble node ids to the player bot
-
-            bot.AddAvailableNodeIds(validAvaialableNodes.Select(node => node.Id));
-            UpdateTerritory(bot, bot.Territory.PositionsInTerritory.ToList());
-
-            bot.RemoveAvaialableNode(baseId);
-
-            /*           Logger.LogDebug("Test = AddAvailableNodes on bot =============================================================================",
-                           JsonConvert.SerializeObject(bot.Map.AvailableNodes.ToList(), Formatting.Indented));*/
-
-            return bot;
-        }
-        public IList<AvailableNode> ValidateAvaialbleNodes(BotObject bot)
-        {
-
-            HashSet<Position> territoryPositions = bot.Territory.PositionsInTerritory;
-
-            var availablePositionsInTerritory = territoryPositions.Except(positionsInUse);
-
-            availablePositionsInTerritory.ToList().ForEach(availablePositions => Logger.LogDebug("terrtory", JsonConvert.SerializeObject(availablePositions)));
-
-            var availableNodes = availablePositionsInTerritory.Select(
-
-                position => new AvailableNode(position)
-                {
-                    MaxUnits = 10, //TODO: update
-                }
-                ).ToList();
-
-            positionsInUse.UnionWith(availablePositionsInTerritory);
-
-            return availableNodes;
-        }
-
-
-
-        private Position GetNextBotPosition()
+        
+        public Position GetNextBotPosition()
         {
             var randomIndex = randomGenerator.Next(0, presetBotLocations.Count);
             var position = presetBotLocations[randomIndex];
@@ -250,26 +159,12 @@ namespace Engine.Services
             return state.World.Map.ResolveAvailableNode(id);
         }
 
-        //Territory positions for the Bot and the ScoutTower are updated
-        public void UpdateTerritory(BotObject bot, List<Position> newTerritoryNodes)
-        {
-            //      state.World.Map.ScoutTowers.ForEach(scoutTower => territory.PositionsInTerritory.Union());
-
-            foreach (var position in newTerritoryNodes)
-            {
-                //TODO: does this need to be here? Because the territory posistions are already updated in bot.UpdateBuildingList
-                bot.Territory.AddPosition(position);
-                claimedTerritory.Add(position);
-
-                var st = GetScoutTowerByRegion(state.World.Map.ScoutTowers, position);
-
-                st.AddTerritoryNode(bot.BotId, position);
-            }
-        }
-
         public void AddResourceToMap(ResourceNode resourceNode)
         {
+            if (positionsInUse.Contains(resourceNode.Position)) return;
             state.World.Map.Nodes.Add(resourceNode);
+            positionsInUse.Add(resourceNode.Position);
+            NodesByPosition[resourceNode.Position] = resourceNode;
         }
 
         public ScoutTower GetScoutTower(Guid id)
@@ -277,13 +172,13 @@ namespace Engine.Services
             return state.World.GetScoutTower(id);
         }
 
-        public ScoutTower GetScoutTowerByRegion(List<ScoutTower> scoutTowers, Position position)
+        public ScoutTower GetScoutTowerByRegion(Position position)
         {
             int regionSize = engineConfig.RegionSize;
             int xBucket = position.X / regionSize;
             int yBucket = position.Y / regionSize;
 
-            return scoutTowers.FirstOrDefault(tower => tower.XRegion == xBucket && tower.YRegion == yBucket);
+            return state.World.Map.ScoutTowers.FirstOrDefault(tower => tower.XRegion == xBucket && tower.YRegion == yBucket);
         }
 
         public ResourceNode GetScoutTowerAsResourceNode(Guid id)
@@ -305,30 +200,6 @@ namespace Engine.Services
                                 engineConfig.ResourceGenerationConfig.Campfire.WorkTimeRange[1])
             };
 
-        }
-
-        public Node ResolveNode(PlayerAction playerAction)
-        {
-            switch (playerAction.ActionType)
-            {
-                case ActionType.Scout:
-                    return GetScoutTowerAsResourceNode(playerAction.TargetNodeId);
-                case ActionType.StartCampfire:
-                    return GetBaseAsResourceNode(playerAction.Bot);
-                case ActionType.Mine:
-                case ActionType.Farm:
-                case ActionType.Lumber:
-                    return GetResourceNode(playerAction.TargetNodeId);
-                case ActionType.Quarry:
-                case ActionType.LumberMill:
-                case ActionType.FarmersGuild:
-                case ActionType.OutPost:
-                case ActionType.Road: 
-                    return GetAvailableNode(playerAction.Bot, playerAction.TargetNodeId);
-                case ActionType.Error:
-                default:
-                    return null;
-            }
         }
 
         public Position ResolveNodePosition(PlayerAction playerAction)
@@ -427,7 +298,7 @@ namespace Engine.Services
             return null;
         }
 
-        private ScoutTower CreateScoutTower(int i, int j)
+        public ScoutTower CreateScoutTower(int i, int j)
         {
             var regionSize = engineConfig.RegionSize;
 
@@ -549,6 +420,7 @@ namespace Engine.Services
                         };
                         nodes.Add(node);
                         regionScoutTower.Nodes.Add(node.Id);
+                        NodesByPosition[node.Position] = node;
                     }
 
                     // Wood
@@ -583,6 +455,7 @@ namespace Engine.Services
                         };
                         nodes.Add(node);
                         regionScoutTower.Nodes.Add(node.Id);
+                        NodesByPosition[node.Position] = node;
                     }
 
                     // Stone
@@ -617,6 +490,7 @@ namespace Engine.Services
                         };
                         nodes.Add(node);
                         regionScoutTower.Nodes.Add(node.Id);
+                        NodesByPosition[node.Position] = node;
                     }
 
                     //Gold
@@ -653,6 +527,7 @@ namespace Engine.Services
                         };
                         nodes.Add(node);
                         regionScoutTower.Nodes.Add(node.Id);
+                        NodesByPosition[node.Position] = node;
                     }
                 }
             }
@@ -703,5 +578,10 @@ namespace Engine.Services
                 .ToList();
 
         private int GetMatchPointsFromPlacement(int placement) => ((engineConfig.BotCount - placement) + 1) * 2;
+
+        public Node NodeByPosition(Position position)
+        {
+            return NodesByPosition.ContainsKey(position) ? NodesByPosition[position] : null;
+        }
     }
 }

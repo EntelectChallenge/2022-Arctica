@@ -4,6 +4,9 @@ using System.IO;
 using Domain.Configs;
 using Domain.Enums;
 using Domain.Models;
+using Engine.Handlers.Actions.Retrieval;
+using Engine.Handlers.Interfaces;
+using Engine.Handlers.Resolvers;
 using Engine.Interfaces;
 using Engine.Models;
 using Engine.Services;
@@ -20,6 +23,9 @@ namespace EngineTests
         protected IConfigurationService EngineConfigFake;
         protected FakeGameObjectProvider FakeGameObjectProvider;
         protected ICalculationService CalculationService;
+        protected TerritoryService TerritoryService;
+        protected ObjectGenerationService ObjectGenerationService;
+        protected ActionService ActionService;
         public Guid WorldBotId;
 
         [OneTimeSetUp]
@@ -29,15 +35,24 @@ namespace EngineTests
                 .AddJsonFile("testConfig.json", false)
                 .Build();
             EngineConfigFake = new ConfigurationService(Options.Create(configuration.Get<EngineConfig>()));
-            CalculationService = new CalculationService(EngineConfigFake);
+            CalculationService = new CalculationService(EngineConfigFake, TerritoryService);
         }
 
         protected void Setup()
         {
-            //VectorCalculatorService = new VectorCalculatorService();
+            var actionHandlers = new List<IActionHandler>
+            {
+                new SendScoutActionHandler(WorldStateService, EngineConfigFake)
+            };
+            var actionHandlerResolver = new ActionHandlerResolver(actionHandlers);
+
             WorldStateService = new WorldStateService(EngineConfigFake);
-            FakeGameObjectProvider = new FakeGameObjectProvider(WorldStateService);
-            CalculationService = new CalculationService(EngineConfigFake);
+            CalculationService = new CalculationService(EngineConfigFake, TerritoryService);
+            TerritoryService = new TerritoryService(WorldStateService);
+            ObjectGenerationService = new ObjectGenerationService(WorldStateService, EngineConfigFake, TerritoryService);
+            ActionService = new ActionService(WorldStateService, actionHandlerResolver, CalculationService, EngineConfigFake, TerritoryService);
+            FakeGameObjectProvider = new FakeGameObjectProvider(WorldStateService, ObjectGenerationService);
+
         }
 
         protected void SetupFakeWorld(bool withABot = true, bool withFood = true)
@@ -50,7 +65,7 @@ namespace EngineTests
             if (withABot)
             {
                 WorldBotId = Guid.NewGuid();
-                WorldStateService.CreateBotObject(WorldBotId);
+                ObjectGenerationService.CreateBotObject(WorldBotId);
             }
 
            // WorldStateService.GetPublishedState.WormholePairs = new List<Tuple<GameObject, GameObject>>();

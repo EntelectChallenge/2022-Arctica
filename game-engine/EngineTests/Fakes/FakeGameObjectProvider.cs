@@ -4,6 +4,7 @@ using System.Linq;
 using Domain.Enums;
 using Domain.Models;
 using Engine.Interfaces;
+using Engine.Services;
 
 namespace EngineTests.Fakes
 {
@@ -13,10 +14,12 @@ namespace EngineTests.Fakes
     public class FakeGameObjectProvider
     {
         private readonly IWorldStateService worldStateService;
+        private readonly ObjectGenerationService objectGenerationService;
 
-        public FakeGameObjectProvider(IWorldStateService worldStateService)
+        public FakeGameObjectProvider(IWorldStateService worldStateService, ObjectGenerationService objectGenerationService)
         {
             this.worldStateService = worldStateService;
+            this.objectGenerationService = objectGenerationService;
         }
 
 /*        public void GenerateWorld(List<BotObject> bot, IEnumerable<ResourceNode> resourceNodes, IEnumerable<ScoutTower> scoutTowers)
@@ -47,7 +50,7 @@ namespace EngineTests.Fakes
 
         public BotObject GetBaseBotAt()
         {
-            return worldStateService.CreateBotObject(Guid.NewGuid());
+            return objectGenerationService.CreateBotObject(Guid.NewGuid());
             ;
         }
 

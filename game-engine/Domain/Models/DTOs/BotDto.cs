@@ -16,7 +16,7 @@ namespace Domain.Models.DTOs
         public List<PlayerActionDto> PendingActions { get; set; }
         public List<PlayerActionDto> Actions { get; set; }
         public List<BuildingObject> Buildings { get; set; }
-        public List<Position> Territory { get; set; }
+        public List<Land> Territory { get; set; }
         public StatusMultiplier StatusMultiplier { get; set; }
         public int AvailableUnits { get; set; }
         public int Seed { get; set; }

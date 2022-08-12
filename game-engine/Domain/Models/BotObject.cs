@@ -61,29 +61,14 @@ namespace Domain.Models
 
         public Position GetBasePosition()
         {
-            return Buildings.FirstOrDefault(x => x.Type == BuildingType.Base).Position;
+            return Buildings.First(x => x.Type == BuildingType.Base).Position;
         }
 
-        public void UpdateBuildingList(BuildingObject building, ISet<Position> claimedTerritory)
-        {
-            Buildings.Add(building);
-
-            Territory.AddBuilding(building, claimedTerritory);
-
-
-            
-
-
-        }
-
-        public void RemoveAvaialableNode(Guid availableNodeId)
+        public void RemoveAvailableNode(Guid availableNodeId)
         {
 
             Map.AvailableNodes.Remove(availableNodeId);
         }
-
-        //Add territory nodes to the bot map
-
 
         //Update status effect object with incomming building buff
         public void AddStatusEffect(BuildingType buildingType, int statusMuliplier)
@@ -121,66 +106,27 @@ namespace Domain.Models
             return Map.ToString();
         }
 
-        public void AddAction(PlayerAction playerAction, Node node)
+        public void AddAction(PlayerAction playerAction)
         {
-            int availableSpace = 0;
-            int unitsToWork = 0;
-            switch (playerAction.ActionType)
-            {
-                case ActionType.Scout:
-                    playerAction.NumberOfUnits = playerAction.NumberOfUnits >= 1 ? 1 : playerAction.NumberOfUnits;
-                    break;
-                case ActionType.StartCampfire:
-                    break;
-                case ActionType.Mine:
-                case ActionType.Farm:
-                case ActionType.Lumber:
-                    availableSpace = node.MaxUnits - node.CurrentUnits;
-                    unitsToWork = playerAction.NumberOfUnits >= availableSpace
-                       ? availableSpace
-                       : playerAction.NumberOfUnits;
-
-                    if (unitsToWork <= 0) return;
-
-                    playerAction.NumberOfUnits = unitsToWork;
-                    node.CurrentUnits += unitsToWork;
-                    break;
-                case ActionType.Quarry:
-                case ActionType.FarmersGuild:
-                case ActionType.LumberMill:
-                case ActionType.OutPost:
-                case ActionType.Road:
-                    //Should we force players to send a sertin number of builders at a time OR will the number of units sent effect the build duration
-                    playerAction.NumberOfUnits = playerAction.NumberOfUnits >= 1 ? 1 : playerAction.NumberOfUnits;
-
-
-                    availableSpace = node.MaxUnits - node.CurrentUnits;
-                    unitsToWork = playerAction.NumberOfUnits >= availableSpace
-                       ? availableSpace
-                       : playerAction.NumberOfUnits;
-
-                    if (unitsToWork <= 0) return;
-
-                    playerAction.NumberOfUnits = unitsToWork;
-                    node.CurrentUnits += unitsToWork;
-                    break;
-                case ActionType.Error:
-                default:
-                    return;
-            }
             AvailableUnits -= playerAction.NumberOfUnits;
             PendingActions.Add(playerAction);
-
         }
 
         public List<PlayerAction> GetActions()
         {
+            return Actions;
+        }
+
+        public List<PlayerAction> GetNewActions()
+        {
+            List<PlayerAction> newActions;
             lock (PendingActions)
             {
-                Actions.AddRange(PendingActions);
+                newActions = PendingActions.ToList();
                 PendingActions.Clear();
+                Actions.AddRange(newActions);
             }
-            return Actions;
+            return newActions;
         }
 
         public void RemoveAction(PlayerAction playerAction)
@@ -206,7 +152,7 @@ namespace Domain.Models
             Heat = Heat,
             PendingActions = PendingActions.Select(action => action.ToStateObject()).ToList(),
             Actions = Actions.Select(action => action.ToStateObject()).ToList(),
-            Territory = Territory.PositionsInTerritory.ToList(),
+            Territory = Territory.LandInTerritory.ToList(),
             StatusMultiplier = StatusMultiplier,
             Buildings = Buildings
         };
@@ -237,7 +183,7 @@ namespace Domain.Models
 
             var excludedAvailableNodes = availableNodes.Where(an => !Map.AvailableNodes.Contains(an));
 
-            Console.WriteLine("Nodes avaiable in AddAvaialableNode");
+            Console.WriteLine("Nodes available in AddAvailableNode");
             Console.WriteLine(JsonConvert.SerializeObject(excludedAvailableNodes, Formatting.Indented));
 
             Map.AvailableNodes.AddRange(excludedAvailableNodes);

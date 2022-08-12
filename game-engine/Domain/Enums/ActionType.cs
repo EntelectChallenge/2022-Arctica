@@ -8,11 +8,12 @@
         Farm = 3,
         Lumber = 4,
         StartCampfire = 5,
-        //Buldings:
         Quarry = 6,
         FarmersGuild = 7,
         LumberMill = 8,
         OutPost = 9,
-        Road = 10
+        Road = 10,
+        OccupyLand = 11,
+        LeaveLand = 12
     }
 }

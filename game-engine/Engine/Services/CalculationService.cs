@@ -16,9 +16,12 @@ namespace Engine.Services
     {
         private readonly EngineConfig engineConfig;
         private readonly Random randomGenerator;
+        private readonly TerritoryService territoryService;
 
-        public CalculationService(IConfigurationService engineConfig)
+
+        public CalculationService(IConfigurationService engineConfig, TerritoryService territoryService)
         {
+            this.territoryService = territoryService; 
             this.engineConfig = engineConfig.Value;
             this.randomGenerator = new Random(this.engineConfig.WorldSeed);
         }
@@ -203,8 +206,19 @@ namespace Engine.Services
         private int ApplyStatusMuliplier(ResourceNode node, PlayerAction action, int statusMultipler)
         {
             var isInTerritory = IsInTerritory(node, action);
-
-            return node.Reward + (isInTerritory ? statusMultipler : 0);
+            var isOwnedByAnyBot = this.territoryService.NodeIsInTerritory(node);
+            if (!isInTerritory)
+            {
+                if (isOwnedByAnyBot)
+                {
+                    return (int) Math.Round(node.Reward * 0.7) ; 
+                }
+                else
+                {
+                    statusMultipler = 0; 
+                }
+            }
+            return node.Reward + statusMultipler ;
         }
 
         //Verify if building is in territory 
@@ -219,12 +233,16 @@ namespace Engine.Services
             return playerActions.Sum(x => CalculateAmountExtracted(resourceNode, x));
         }
 
-        private double CalculateDistance(Position a, Position b)
+        public static  double CalculateDistanceStatic(Position a, Position b)
         {
             var deltaX = a.X - b.X;
             var deltaY = a.Y - b.Y;
             var distanceSquared = (deltaX * deltaX) + (deltaY * deltaY);
             return Math.Sqrt(distanceSquared);
+        }
+        public double CalculateDistance(Position a, Position b)
+        {
+           return  CalculateDistanceStatic(a, b); 
         }
 
 
@@ -236,7 +254,8 @@ namespace Engine.Services
                 bot.Stone * engineConfig.ResourceScoreMultiplier.Stone +
                 bot.Food * engineConfig.ResourceScoreMultiplier.Food +
                 bot.Gold * engineConfig.ResourceScoreMultiplier.Gold +
-                bot.Buildings.Sum(building => building.ScoreMultiplier);
+                bot.Buildings.Sum(building => building.ScoreMultiplier) +
+                bot.Territory.LandInTerritory.Count * 2;
             return score;
         }
     }

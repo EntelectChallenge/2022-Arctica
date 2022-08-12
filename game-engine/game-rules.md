@@ -42,14 +42,18 @@ It will likely benefit you in the long term!
 
 ** one eternity later **
 
-Traveller! Times have changed - there is very little left to explore, it is now imperative that you use your available buildings to more effectively control your territory. 
+Traveller! Times have changed - there is very little left to explore, it is now imperative that you use your available buildings to more effectively control your territory.
 Shhhhh 🤫 they are approaching fast - they come for our land...
+
+** a short while later ** 
+
+... They come! Traveller, they come! Hurry — protect your land from those that try take it! Send people to protect your borders against the invaders that come from other villages. 
+You are no push over, traveller! Pressure them in return! Show them that you, too, are willing to fight for the land in these snowy plains. Retribution!
 
 ---
 
-## UPDATE: Phase 3 part 1 is out!!
-This new release contains lots of exciting stuff to add to the real-time-strategy carnage.  
-Look forward to buildings, buffs, borders, and bling this round as we start to play with creating buildings and expanding territory. 
+## UPDATE: Phase 3 part 2 is out!!
+This new release contains a new feature that will allow you to [claim territory](#claiming-territory) from other villages, protect the resources in your territory, as well as some balancing, and a community-driven bug-fix to [improve fairness for slower bots](#slow-bot-bug-fix).
 
 ## Contents
 - [The Game](#the-game)
@@ -59,7 +63,12 @@ Look forward to buildings, buffs, borders, and bling this round as we start to p
         - [Scout Towers](#scout-towers)
         - [Resource Nodes](#resource-nodes)
         - [Buildings](#buildings)
-          - [Territory](#territory)
+        - [Territory](#territory)
+          - [Claiming Territory](#claiming-territory)
+          - [Territory Recalculation](#territory-recalculation)
+          - [Pressure Calculation](#pressure-calculation)
+          - [Territory Representation](#territory-representation)
+        - [Status Effects](#status-effects-buffsdebuffs)
     - [Game Tick Payload](#game-tick-payload)
         - [World](#world)
         - [Nodes](#nodes)
@@ -76,7 +85,6 @@ Look forward to buildings, buffs, borders, and bling this round as we start to p
         - [Command: QUARRY](#command-quarry)
         - [Command: OUTPOST](#command-outpost)
         - [Command: ROAD](#command-road)
-       
     - [Inter tick calculations](#inter-tick-calculations)
       - [Travel time](#travel-time)
       - [population tiers](#population-tiers)
@@ -87,7 +95,8 @@ Look forward to buildings, buffs, borders, and bling this round as we start to p
         - [Resource Distribution](#resource-distribution)
         - [Distance Calculation](#distance-calculation)
         - [Rounding](#rounding)
-    -  [Logging](#logging)     
+    - [Slow Bot Bug Fix](#slow-bot-bug-fix)     
+    - [Logging](#logging)     
 
 ---
 ## The Map
@@ -222,6 +231,8 @@ Limited resource supply. Use the **[lumber](#command-lumber)** command on your u
 
 At the end of **10 ticks** all bots enter the night cycle of the game. This is where your people choose to leave or stay based on how much food and warmth they have.
 
+[Territory recalculation](#territory-recalculation) also occurs here.
+
 _For more information see **[Population](#population-growthdecline-rate)**_
 
 ### Buildings
@@ -239,13 +250,108 @@ These are the building types that supply the following status buffs:
 - Farmer's guild - improves the collection of food
 - Lumber mill - improves the collection of wood
 
-#### Territory
-Territory is gained on a **first come, first served** basis. This means that territory cannot change once it has been established. The first person to claim a position will be the owner of that position for the rest of the match.
+## Territory
 
+When placing buildings, territory is gained on a **first come, first served** basis. 
 ![Territory expanding](images/expanding-territory.png)
 
 In the image above, there are two bots that are placing buildings (represented as small dark squares), which allow them to expand their territory. Note, the blue territory was placed first, so the yellow territory cannot replace it.
 
+**PHASE 3 UPDATE**  
+As part of phase 3, we have added the ability to claim territories from other bots. It is important to do this as we have also added in a debuff when harvesting resources from other bot territories.
+
+### Claiming Territory
+Two new actions have been added, OccupyLand and LeaveLand, that allow bots to occupy land. Each piece of land corresponds to a node on the map, but only those that are already part of another territory.
+
+#### TL;DR: very basic summary
+Territory can be claimed from another bot by sending more and more units to occupy enemy territory that borders your own.
+Depending on the amount of units occupying a node, at the end of each day, territory will be transferred to the bot with the most pressure. 
+Pressure is directly increased by the number of units, and is described in more detail below.
+
+#### Basic rules for claiming territory
+
+There are a few basic rules to this functionality:
+1. Units can be placed at a Land object using the OccupyLand action. 
+2. Each group of Occupants on a Land object belongs to a different bot. A quantity called [Pressure](#pressure-calculation) is calculated Based on:
+   1. the position of the Land (RadialWeight), 
+   2. the ownership (HomeGroundWeight), 
+   3. and the number of units occupying it (Count).
+3. At the end of each day (10 ticks), territory recalculation happens.
+
+For the OccupyLand action, Land can only be occupied if any of the following are true:
+1. The land is in your territory
+2. The is on the border of your territory
+3. Or the land already has a positive amount of occupants from your bot.
+
+LeaveLand actions can only be sent to Land that already has a positive amount of occupants from the bot.
+
+Consider a scenario between two bots, one blue and the other purple, to demonstrate the above rules.
+
+The below image shows, in the blue box, which territory the blue bot can claim from the purple bot.
+![Blue bot claiming purple bot territory](images/BlueTakingPurple.png)
+
+The below image shows, in the red box, which territory the purple bot can claim from the blue bot.
+![Purple bot claiming blue bot territory](images/PurpleTakingBlue.png)
+
+**The OccupyLand action is designed to both claim and protect territory.**
+
+There is no upper bound to the amount of units that can occupy a specific piece of land, however, the only way to get them to return is to bring them all back at once with the LeaveLand action.  
+Be careful about how many units you send to a specific target node!
+
+Note: buildings cannot be claimed by another bot, only resource and available nodes. This can result in your building being inside of another bot's territory, but this won't change anything.
+
+### Territory Recalculation
+Territory ownership shifts to the dominant bot on a piece of Land at the end of every day (10 ticks).
+The dominant bot is determined by the occupant group with the highest pressure.
+If there are multiple occupant groups with the same amount of pressure, then territory ownership won't change until one of them breaks the stalemate.
+
+
+### Pressure Calculation
+Pressure is calculated using the following formula:  
+```Pressure = (Count + 1) * RadialWeight * (ownsLand ? HomeGroundWeight : 1)```
+
+The HomeGroundWeight is a simple config variable, while the RadialWeight has a formula to it.  
+The RadialWeight is designed as a hyperbolic weighting centered around each bot's base. This means that Occupants on land closer to the bot's base will inherently produce a higher pressure.
+
+The RadialWeight formula is shown below in text and the image:  
+```RadialWeight = Floor(1 + 10/(radialDistanceFromBase + 0.01))```
+
+![RadialWeight Formula](images/RadialWeightCalculation.png)
+
+The `x` variable represents the `radialDistanceFromBase`. The original hyperbolic graph is overlayed with the floored version to get a better sense of how the weights change.
+
+
+### Territory Buffs/Debuffs
+The initial aim of territory was to boost harvesting actions with increased rewards based on the number of buildings that one owns. 
+In this new phase, resource nodes in your territory are now protected as well. If a node is in your territory, then all other bots will yield a reduced amount of resources from it.
+But remember, this goes in both directions: if you try to harvest resources inside another bot's territory, the same reduction applies.
+
+
+### Territory Representation
+The new classes, Land and Occupants, also serve as DTOs to show the distribution of territory in the game.
+Previously Position objects were used to represent territory, but Land builds on that with the following fields:
+
+Land: 
+```json
+{
+  "land": {
+    "X": "int",
+    "Y": "int",
+    "Owner": "GUID",
+    "NodeOnLand": "GUID",
+    "Occupants": ["List of occupant objects"]
+  }
+}
+```
+
+Occupants:
+```json
+{
+    "BotId": "GUID",
+    "Count": "int",
+    "Pressure": "int"
+}
+```
 
 ---
 
@@ -459,7 +565,17 @@ All players will receive the state of the world, all game objects and all player
             } ],
             "territory" : [ {
                 "x" : 9,
-                "y" : 9
+                "y" : 9,
+                "owner": "dfdcda53-d615-432c-b3f7-12ea74a1a72c",
+                "nodeOnLand": "99afa6c1-59af-4eae-a88a-2ea570d3ac51",
+                "occupants": [
+                    {
+                        "BotId": "dfdcda53-d615-432c-b3f7-12ea74a1a72c",
+                        "Count": 10,
+                        "Pressure": 15
+                    },
+                    ...
+                ]
               }, {
                 "x" : 9,
                 "y" : 10
@@ -619,6 +735,13 @@ Example Payload in JSON with types:
 * MINE
 * LOG
 * START_CAMPFIRE
+* QUARRY
+* FARMERS_GUILD
+* LUMBER_MILL
+* ROAD
+* OUTPOST
+* OCCUPY_LAND
+* LEAVE_LAND
 
 ---
 ### Command stages
@@ -781,7 +904,7 @@ Example Payload in JSON with types:
 OUTPOST: 9 
 ```
 
-This command will send the amount of specified units to build an outpost, 
+This command will send the amount of specified units to build an outpost,
 
 Example Payload in JSON with types:
 ```jsonc
@@ -798,7 +921,7 @@ Example Payload in JSON with types:
 ROAD: 10
 ```
 
-This command will send the amount of specified units to build a road, 
+This command will send the amount of specified units to build a road,
 
 Example Payload in JSON with types:
 ```jsonc
@@ -809,6 +932,43 @@ Example Payload in JSON with types:
 }
 ```
 
+---
+---
+### Command: OCCUPY_LAND
+
+```
+OCCUPY_LAND: 11
+```
+
+This command will send the amount of specified units to occupy the target node,
+
+Example Payload in JSON with types:
+```jsonc
+{
+    "type" : 11,                                   // action type - int
+    "units" : 20,                                  // number of units to travel to node- int
+    "id" : "60b71170-bbe3-4cfa-8069-87202340fc9f" // destination node - string/UUID/GUID
+}
+```
+
+---
+---
+### Command: LEAVE_LAND
+
+```
+LEAVE_LAND: 12
+```
+
+This command will send one unit to inform all the occupants on a target node to vacate and return home.
+
+Example Payload in JSON with types:
+```jsonc
+{
+    "type" : 12,                                   // action type - int
+    "units" : 1,                                  // number of units to travel to node- int
+    "id" : "60b71170-bbe3-4cfa-8069-87202340fc9f" // destination node - string/UUID/GUID
+}
+```
 
 ---
 ## Inter tick calculations
@@ -958,6 +1118,21 @@ Note when doing rounding calculations in your own bot check the rules of the spe
 No language will have a advantage as only integer values are used in commands and the engine calculates all bot commands in the same way.
 This section is for reference to check that your bot calculations and decision points align with how the engine works.
 
+
+---
+
+### Slow Bot Bug Fix
+Thanks to the community for identifying a bug in the fairness of the game.
+Thanks to Kobus Van Schoor for putting together a PR that solved the issue!
+
+A brief description of the issue and the fix:  
+The game engine operates on tick cycles. Every tick it receives actions from the bot and immediately acts on them.
+
+Resource nodes have a maximum capacity for units on them at any given moment. If this capacity is reached, no more units can be placed on the node.
+When a harvesting action is received, it would instantly take up space on the resource node. If too much demand for a specific resource node happens on a given tick, then there is no space remaining for the later actions that are received in that tick.
+
+The fix collects harvesting actions and distributes the available space at the target node between the actions.
+The distribution is proportional to the number of units on each action, as a percentage of the total units from all actions that are trying to be placed. 
 
 ---
 

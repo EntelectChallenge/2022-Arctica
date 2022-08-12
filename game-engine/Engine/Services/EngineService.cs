@@ -23,6 +23,7 @@ namespace Engine.Services
         private readonly IWorldStateService worldStateService;
         private readonly ITickProcessingService tickProcessingService;
         private readonly ICalculationService calculationService;
+        private readonly TerritoryService territoryService;
         private HubConnection hubConnection;
         public int TickAcked { get; set; }
         public bool HasWinner { get; set; }
@@ -34,13 +35,16 @@ namespace Engine.Services
             IActionService actionService,
             IConfigurationService engineConfig,
             ITickProcessingService tickProcessingService,
-            ICalculationService calculationService)
+            ICalculationService calculationService,
+            TerritoryService territoryService
+            )
         {
             this.worldStateService = worldStateService;
             this.actionService = actionService;
             this.tickProcessingService = tickProcessingService;
             this.engineConfig = engineConfig.Value;
             this.calculationService = calculationService;
+            this.territoryService = territoryService;
         }
 
         public HubConnection SetHubConnection(ref HubConnection connection) => hubConnection = connection;
@@ -115,7 +119,7 @@ namespace Engine.Services
                         {
                             return bot.ToStateObject(gameState);
                         }
-                        //add terrioties here
+                        //add territories here
                         Console.WriteLine("new botDto");
                         return new BotDto()
                         {
@@ -123,7 +127,7 @@ namespace Engine.Services
                             Population = otherBot.GetPopulation(),
                             Food = otherBot.Food,
                             Stone = otherBot.Stone,
-                            Territory = otherBot.Territory.PositionsInTerritory.ToList(),
+                            Territory = otherBot.Territory.LandInTerritory.ToList(),
                             StatusMultiplier = otherBot.StatusMultiplier,
                             Buildings = otherBot.Buildings,
                             Wood = otherBot.Wood,
@@ -185,78 +189,13 @@ namespace Engine.Services
 
             Logger.LogInfo("RunLoop", "======================================================================");
             Logger.LogInfo("RunLoop", "Tick: " + worldStateService.GetCurrentTick());
-
+            DistributeHarvestingActionSlots(bots);
             SimulateTickForBots(bots);
-            // TODO: maybe refactor the below into a method for better readability
-            // =======================
-            var renewableNodes = worldStateService.GetState().World.Map.Nodes
-                .Where(node => node.RegenerationRate != null);
-            foreach (var node in renewableNodes)
-            {
-                node.CurrentRegenTick++;
-                if (node.CurrentRegenTick >= node.RegenerationRate.Ticks)
-                {
-                    node.Amount += node.RegenerationRate.Amount;
-                    if (node.Amount > node.MaxResourceAmount)
-                    {
-                        node.Amount = node.MaxResourceAmount;
-                    }
-                    node.CurrentRegenTick = 0;
-                }
-            }
-            // =======================
-
+            RegenerateRenewableResources();
             if (worldStateService.GetCurrentTick() % engineConfig.ProcessTick == 0 &&
                 worldStateService.GetCurrentTick() != 0)
             {
-                // Process the interday processes for each bots
-                Logger.LogInfo("RunLoop", "End of day: Updating population size");
-                foreach (var bot in bots)
-                {
-                    bot.Food -= calculationService.CalculateFoodUpkeep(bot);
-                    bot.Wood -= calculationService.CalculateWoodUpkeep(bot);
-                    bot.Stone -= calculationService.CalculateStoneUpkeep(bot);
-                    bot.Gold -= calculationService.CalculateGoldUpkeep(bot);
-                    bot.Heat -= calculationService.CalculateHeatUpkeep(bot);
-
-                    var populationChange = calculationService.GetPopulationChange(bot);
-                    Logger.LogInfo("RunLoop", $"Population Delta: {populationChange}");
-
-                    var oldAvailableUnits = bot.AvailableUnits;
-                    // TODO: refactor the below into a population change method on bot
-                    bot.AvailableUnits += populationChange;
-                    bot.Population += populationChange;
-
-                    // Check if they have reached a new tier
-                    try
-                    {
-                        var currentPopulationTier = calculationService.GetBotPopulationTier(bot);
-                        var nextTier =
-                            engineConfig.PopulationTiers.SingleOrDefault(tier =>
-                                tier.Level == bot.CurrentTierLevel + 1);
-                        if (nextTier != default)
-                        {
-                            if (
-                                bot.Population >= currentPopulationTier.MaxPopulation &&
-                                bot.Food >= nextTier.TierResourceConstraints.Food &&
-                                bot.Stone >= nextTier.TierResourceConstraints.Stone &&
-                                bot.Gold >= nextTier.TierResourceConstraints.Gold &&
-                                bot.Wood >= nextTier.TierResourceConstraints.Wood
-                            )
-                            {
-                                bot.CurrentTierLevel++;
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.LogError("Tier", e.Message);
-                    }
-
-
-                    Logger.LogInfo("Population Changes",
-                        $"{oldAvailableUnits} + {populationChange} = {bot.AvailableUnits}");
-                }
+                DayEnd(bots);
             }
 
             worldStateService.ApplyAfterTickStateChanges();
@@ -269,6 +208,150 @@ namespace Engine.Services
 
             // stoplog.Log("After Tick SC Complete");
             CheckWinConditions();
+        }
+        
+        public void DistributeHarvestingActionSlots(IList<BotObject> bots)
+        {
+            // update resource nodes available units and re-distribute available slots if the node was over-allocated
+
+            // get all the bot actions that were just received
+            var newActions = bots.SelectMany(bot => bot.GetNewActions());
+            var resourceActionsGroupedByNode = from action in newActions 
+                where IsResourceAction(action.ActionType)
+                group action by action.TargetNodeId into g
+                select new { NodeId = g.Key, Actions = g.ToList() };
+
+            foreach (var group in resourceActionsGroupedByNode)
+            {
+                var node = worldStateService.GetResourceNode(group.NodeId);
+                var actions = group.Actions;
+                DistributeNodeSpaceAmongActions(node, actions);
+            }
+        }
+
+        public void DistributeNodeSpaceAmongActions(ResourceNode node, List<PlayerAction> actions)
+        {
+            if (actions.Count == 1)
+            {
+                node.CurrentUnits += actions[0].NumberOfUnits;
+            }
+            else
+            {
+                var totalUnitsToAdd = actions.Sum(action => action.NumberOfUnits);
+                var availableSpace = node.MaxUnits - node.CurrentUnits;
+                if (totalUnitsToAdd > availableSpace)
+                {
+                    /*
+                        # Distribute based on the proportions of units in the actions:
+                        We are distributing using the formula: 
+                            newUnits = initialUnits / totalUnits * availableSpace
+                        We can rearrange this to:
+                            newUnits = initialUnits * (availableSpace / totalUnits) = initialUnits * distributionFactor
+                        With:
+                            distributionFactor = availableSpace / totalUnits
+                        This minimizes some computation
+                        */
+                    var distributionFactor = (double) availableSpace / totalUnitsToAdd;
+                    foreach (var action in actions)
+                    {
+                        var newUnits = (int) Math.Floor(action.NumberOfUnits * distributionFactor);
+                        SendUnneededUnitsHome(action, newUnits);
+                        action.NumberOfUnits = newUnits;
+                    }
+                    var adjustedTotalUnits = actions.Sum(action => action.NumberOfUnits);
+                    node.CurrentUnits += adjustedTotalUnits;
+                }
+                else
+                {
+                    // add the units as planned
+                    node.CurrentUnits += totalUnitsToAdd;
+                }
+            }
+        }
+
+        private void SendUnneededUnitsHome(PlayerAction action, int newUnits)
+        {
+            var bot = action.Bot;
+            var unneededUnits = action.NumberOfUnits - newUnits;
+            bot.AvailableUnits += unneededUnits;
+        }
+
+        private bool IsResourceAction(ActionType actionType)
+        {
+            return actionType is ActionType.Farm or ActionType.Lumber or ActionType.Mine;
+        }
+
+        private void RegenerateRenewableResources()
+        {
+            var renewableNodes = worldStateService.GetState().World.Map.Nodes
+                .Where(node => node.RegenerationRate != null);
+            foreach (var node in renewableNodes)
+            {
+                node.CurrentRegenTick++;
+                if (node.CurrentRegenTick >= node.RegenerationRate.Ticks)
+                {
+                    node.Amount += node.RegenerationRate.Amount;
+                    if (node.Amount > node.MaxResourceAmount)
+                    {
+                        node.Amount = node.MaxResourceAmount;
+                    }
+
+                    node.CurrentRegenTick = 0;
+                }
+            }
+        }
+
+        private void DayEnd(IList<BotObject> bots)
+        {
+            // Process the interday processes for each bots
+            Logger.LogInfo("RunLoop", "End of day: Updating population size");
+            foreach (var bot in bots)
+            {
+                bot.Food -= calculationService.CalculateFoodUpkeep(bot);
+                bot.Wood -= calculationService.CalculateWoodUpkeep(bot);
+                bot.Stone -= calculationService.CalculateStoneUpkeep(bot);
+                bot.Gold -= calculationService.CalculateGoldUpkeep(bot);
+                bot.Heat -= calculationService.CalculateHeatUpkeep(bot);
+
+                var populationChange = calculationService.GetPopulationChange(bot);
+                Logger.LogInfo("RunLoop", $"Population Delta: {populationChange}");
+
+                var oldAvailableUnits = bot.AvailableUnits;
+                // TODO: refactor the below into a population change method on bot
+                bot.AvailableUnits += populationChange;
+                bot.Population += populationChange;
+
+                // Check if they have reached a new tier
+                try
+                {
+                    var currentPopulationTier = calculationService.GetBotPopulationTier(bot);
+                    var nextTier =
+                        engineConfig.PopulationTiers.SingleOrDefault(tier =>
+                            tier.Level == bot.CurrentTierLevel + 1);
+                    if (nextTier != default)
+                    {
+                        if (
+                            bot.Population >= currentPopulationTier.MaxPopulation &&
+                            bot.Food >= nextTier.TierResourceConstraints.Food &&
+                            bot.Stone >= nextTier.TierResourceConstraints.Stone &&
+                            bot.Gold >= nextTier.TierResourceConstraints.Gold &&
+                            bot.Wood >= nextTier.TierResourceConstraints.Wood
+                        )
+                        {
+                            bot.CurrentTierLevel++;
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError("Tier", e.Message);
+                }
+
+
+                Logger.LogInfo("Population Changes", $"{oldAvailableUnits} + {populationChange} = {bot.AvailableUnits}");
+            }
+            
+            territoryService.RecalculateTerritories();
         }
 
         public void SimulateTickForBots(IList<BotObject> bots)
@@ -298,7 +381,7 @@ namespace Engine.Services
             foreach (var playAction in actionsToComplete)
             {
                 Logger.LogInfo("RunLoop", "Available units while processing action: " + playAction.Bot.AvailableUnits);
-                if (playAction.ActionType == ActionType.Scout || playAction.ActionType == ActionType.StartCampfire)
+                if (playAction.ActionType is ActionType.Scout or ActionType.StartCampfire or ActionType.OccupyLand or ActionType.LeaveLand)
                 {
                     independentPlayerActions.Add(playAction);
                 }
@@ -311,8 +394,8 @@ namespace Engine.Services
 
                     if (node is null)
                     {
-                        Logger.LogDebug("Debug", $"Target Node {playAction.TargetNodeId} has been is no longer avaialble ");
-                        return;
+                        Logger.LogDebug("Debug", $"Target Node {playAction.TargetNodeId} is no longer available");
+                        continue;
                     }
 
 
@@ -330,7 +413,7 @@ namespace Engine.Services
             // Handle all individual actions
             foreach (var independentPlayerAction in independentPlayerActions)
             {
-                var targetNode = worldStateService.GetResourceNode(independentPlayerAction.TargetNodeId);
+                var targetNode = actionService.ResolveNode(independentPlayerAction);
 
                 actionService.HandleCompletedPlayerAction(targetNode,
                     new List<PlayerAction> { independentPlayerAction },

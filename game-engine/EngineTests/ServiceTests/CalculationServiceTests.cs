@@ -26,7 +26,6 @@ namespace EngineTests.ServiceTests
                 new SendScoutActionHandler(WorldStateService, EngineConfigFake)
             };
             actionHandlerResolver = new ActionHandlerResolver(actionHandlers);
-            actionService = new ActionService(WorldStateService, actionHandlerResolver, CalculationService, EngineConfigFake);
         }
 
         [Test]

@@ -15,13 +15,17 @@ namespace Engine.Handlers.Actions
     internal class BuildActionHandler : IActionHandler
     {
         private readonly IWorldStateService worldStateService;
+        private readonly TerritoryService territoryService;
         private readonly ICalculationService calculationService;
         private readonly EngineConfig engineConfig;
 
-        public BuildActionHandler(IWorldStateService worldStateService, IConfigurationService engineConfig,
+        public BuildActionHandler(IWorldStateService worldStateService, 
+            TerritoryService territoryService,
+            IConfigurationService engineConfig,
             ICalculationService calculationService)
         {
             this.worldStateService = worldStateService;
+            this.territoryService = territoryService;
             this.calculationService = calculationService;
             this.engineConfig = engineConfig.Value;
         }
@@ -51,13 +55,7 @@ namespace Engine.Handlers.Actions
                     Logger.LogDebug("Build Action Handler", $"Invalid action {playerAction.TargetNodeId} has already been taken");
                     return;
                 }
-
-
-                //TODO: add isInTerrotry methods to world state service ...
-
-
-
-
+                
                 Logger.LogInfo("Build Action Handler", "Processing Build Completed Action");
 
                 Position position = worldStateService.ResolveNodePosition(playerAction);
@@ -92,27 +90,11 @@ namespace Engine.Handlers.Actions
                 }
 
                 //Add the increase cost logic here
-                bot.UpdateBuildingList(newBuilding, worldStateService.GetClaimedTerritory());
+                territoryService.AddBuilding(bot, newBuilding); // moved the availableNode stuff into territoryService.AddBuilding
 
-                bot.RemoveAvaialableNode(playerAction.TargetNodeId);
-
-
-                worldStateService.UpdateTerritory(bot, bot.Territory.PositionsInTerritory.ToList());
-                worldStateService.AddPositionInUse(position);
-
-                // List<AvailableNode> validAvialableNodes = worldStateService.ValidateTerritoryNode(bot);
-
-
-                IList<AvailableNode> validAvailableNodes = worldStateService.ValidateAvaialbleNodes(bot);
-
-                worldStateService.AddAvailableNodes(validAvailableNodes.ToList());
-                bot.AddAvailableNodeIds(validAvailableNodes.Select(node => node.Id));
-
-
-                //TODO: check if the avaialable node is still available  
+                worldStateService.AddPositionInUse(position); // do we need to have this?
 
                 bot.AddStatusEffect(buildingType, buildingConfig.StatusEffectMultiplier);
-                worldStateService.RemoveAvailableNode(playerAction.TargetNodeId);
             }
         }
 
@@ -139,7 +121,6 @@ namespace Engine.Handlers.Actions
         private static bool IsNegative(int amount)
         {
             return amount < 0;
-
         }
     }
 }

@@ -23,6 +23,7 @@ namespace Engine.Services
         private readonly IWorldStateService worldStateService;
         private readonly IEngineService engineService;
         private readonly IActionService actionService;
+        private ObjectGenerationService objectGenerationService;
 
         private readonly EngineConfig engineConfig;
         private HubConnection connection;
@@ -32,12 +33,14 @@ namespace Engine.Services
             IWorldStateService worldStateService,
             IConfigurationService engineConfig,
             IEngineService engineService,
-            IActionService actionService)
+            IActionService actionService,
+            ObjectGenerationService objectGenerationService)
         {
             this.worldStateService = worldStateService;
             this.engineService = engineService;
             this.actionService = actionService;
             this.engineConfig = engineConfig.Value;
+            this.objectGenerationService = objectGenerationService;
         }
 
         public async Task Startup()
@@ -171,7 +174,7 @@ namespace Engine.Services
         private void OnRegisterBot(Guid id)
         {
             Logger.LogDebug("Core", "Registering new Bot");
-            worldStateService.CreateBotObject(id);
+            objectGenerationService.CreateBotObject(id);
         }
 
         private void OnBotCommandReceived(Guid botId, PlayerCommand playerCommand)

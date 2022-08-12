@@ -1,30 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Domain.Models;
 
 public class Territory
 {
-    public readonly HashSet<Position> PositionsInTerritory = new(new PositionComparer());
+    public readonly HashSet<Land> LandInTerritory = new(new PositionComparer());
 
 
-    public bool AddPosition(Position position)
+    public bool AddLand(Land land)
     {
-        return PositionsInTerritory.Add(position);
+        return LandInTerritory.Add(land);
     }
 
-    public void AddBuilding(BuildingObject building, ISet<Position> claimedPositions)
-    {
-        var buildingTerritory = building.GetPositionsInBuildingRadius();
-        PositionsInTerritory.UnionWith(buildingTerritory.Except(claimedPositions));
-    }
-    
     public bool Contains(Position position)
     {
-        return PositionsInTerritory.Contains(position);
+        return LandInTerritory.Contains(position);
     }
 
-
-
+    public bool RemoveLand(Land land)
+    {
+        return LandInTerritory.Remove(land);
+    }
 }

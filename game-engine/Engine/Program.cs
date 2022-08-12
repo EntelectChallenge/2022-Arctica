@@ -76,6 +76,8 @@ namespace Engine
             services.AddSingleton<ISignalRService, SignalRService>();
             services.AddSingleton<IEngineService, EngineService>();
             services.AddSingleton<ICalculationService, CalculationService>();
+            services.AddSingleton<TerritoryService, TerritoryService>();
+            services.AddSingleton<ObjectGenerationService, ObjectGenerationService>();
         }
 
         private static void RegisterActionHandlers(IServiceCollection services)
@@ -87,6 +89,8 @@ namespace Engine
             services.AddTransient<IActionHandler, SendFarmActionHandler> ();
             services.AddTransient<IActionHandler, StartCampfireActionHandler> ();
             services.AddTransient<IActionHandler, BuildActionHandler> ();
+            services.AddTransient<IActionHandler, OccupyLandActionHandler> ();
+            services.AddTransient<IActionHandler, LeaveLandActionHandler> ();
         }
 
 

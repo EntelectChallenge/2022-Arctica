@@ -1,96 +1,215 @@
 {
   "RunnerUrl": "http://localhost",
   "RunnerPort": "5000",
-  "BotCount": 1,
-  "TickRate": 50,
+  "BotCount": 4,
+  "TickRate": 250,
   "StartingUnits": 2,
   "StartingFood": 10,
   "RegionSize": 10,
   "BaseZoneSize": 10,
   "ProcessTick": 10,
   "NumberOfRegionsInMapLength": 4,
-  "PopulationDecreaseRatio": 10,
-  "PopulationScoreMultiplier": 1,
-  "WoodScoreMultiplier": 1,
-  "FoodScoreMultiplier": 1,
-  "GoldScoreMultiplier": 1,
   "ScoutWorkTime": 2,
-  "MaxTicks": 100,
+  "MaxTicks": 2500,
   "WorldSeed": 52323,
+  "MinimumPopulation": 4,
   "PopulationTiers": [
     {
       "level": 0,
       "name": "Tier 0",
-      "maxPopulation": 10,
-      "populationIncreaseFactor": 1
+      "maxPopulation": 50,
+      "populationChangeFactorRange": [
+        -0.05,
+        0.05
+      ],
+      "tierResourceConstraints": {
+        "food": 0,
+        "wood": 0,
+        "stone": 0,
+        "gold": 0
+      },
+      "tierMaxResources": {
+        "food": 333,
+        "wood": 500,
+        "stone": 35,
+        "gold":  35
+      }
     },
     {
       "level": 1,
       "name": "Tier 1",
-      "maxPopulation": 100,
+      "maxPopulation": 273,
       "tierResourceConstraints": {
-        "food": 100,
-        "wood": 100,
-        "stone": 100,
-        "gold": 100
+        "food": 78,
+        "wood": 50,
+        "stone": 2,
+        "gold": 2
       },
-      "populationIncreaseFactor": 10
+      "tierMaxResources": {
+        "food": 1675,
+        "wood": 2513,
+        "stone": 168,
+        "gold": 168
+      },
+      "populationChangeFactorRange": [
+        -0.05,
+        0.05
+      ]
     },
     {
       "level": 2,
       "name": "Tier 2",
-      "maxPopulation": 1000,
-      "resourceConstrains": {
-        "food": 1000,
-        "wood": 1000,
-        "stone": 1000,
-        "gold": 1000
+      "maxPopulation": 1334,
+      "tierResourceConstraints": {
+        "food": 408,
+        "wood": 287,
+        "stone": 9,
+        "gold": 9
       },
-      "populationIncreaseFactor": 100
+      "tierMaxResources": {
+        "food": 8065,
+        "wood": 12098,
+        "stone": 808,
+        "gold": 808
+      },
+      "populationChangeFactorRange": [
+        -0.05,
+        0.05
+      ]
     },
     {
       "level": 3,
       "name": "Tier 3",
-      "maxPopulation": 10000,
-      "resourceConstrains": {
-        "food": 10000,
-        "wood": 10000,
-        "stone": 10000,
-        "gold": 10000
+      "maxPopulation": 6398,
+      "tierResourceConstraints": {
+        "food": 1977,
+        "wood": 1418,
+        "stone": 46,
+        "gold": 46
       },
-      "populationIncreaseFactor": 1000
+      "tierMaxResources": {
+        "food": 38520,
+        "wood": 57780,
+        "stone": 3853,
+        "gold": 3853
+      },
+      "populationChangeFactorRange": [
+        -0.05,
+        0.05
+      ]
     },
     {
       "level": 4,
       "name": "Tier 4",
-      "maxPopulation": 100000,
-      "resourceConstrains": {
-        "food": 100000,
-        "wood": 100000,
-        "stone": 100000,
-        "gold": 100000
+      "maxPopulation": 30516,
+      "tierResourceConstraints": {
+        "food": 9456,
+        "wood": 6815,
+        "stone": 218,
+        "gold": 218
       },
-      "populationIncreaseFactor": 10000
+      "tierMaxResources": {
+        "food": 183635,
+        "wood": 275453,
+        "stone": 18365,
+        "gold": 18365
+      },
+      "populationChangeFactorRange": [
+        -0.05,
+        0.05
+      ]
     },
     {
       "level": 5,
       "name": "Tier 5",
-      "maxPopulation": -1,
-      "resourceConstrains": {
-        "food": 1000000,
-        "wood": 1000000,
-        "stone": 1000000,
-        "gold": 1000000
+      "maxPopulation": 145442,
+      "tierResourceConstraints": {
+        "food": 45091,
+        "wood": 32526,
+        "stone": 1043,
+        "gold": 1043
       },
-      "populationIncreaseFactor": 100000
+      "tierMaxResources": {
+        "food": 875095,
+        "wood": 1312643,
+        "stone": 87510,
+        "gold": 87510
+      },
+      "populationChangeFactorRange": [
+        -0.05,
+        0.03
+      ]
+    },
+    {
+      "level": 6,
+      "name": "Tier 6",
+      "maxPopulation": 693059,
+      "tierResourceConstraints": {
+        "food": 214889,
+        "wood": 155042,
+        "stone": 4972,
+        "gold": 4972
+      },
+      "tierMaxResources": {
+        "food": 4169853,
+        "wood": 6254780,
+        "stone": 416988,
+        "gold": 416988
+      },
+      "populationChangeFactorRange": [
+        -0.05,
+        0.03
+      ]
+    },
+    {
+      "level": 7,
+      "name": "Tier 7",
+      "maxPopulation": 3302420,
+      "tierResourceConstraints": {
+        "food": 1023967,
+        "wood": 738812,
+        "stone": 23692,
+        "gold": 23692
+      },
+      "tierMaxResources": {
+        "food": 19869198,
+        "wood": 29803798,
+        "stone": 1986920,
+        "gold": 1986920
+      },
+      "populationChangeFactorRange": [
+        -0.05,
+        0.03
+      ]
+    },
+    {
+      "level": 8,
+      "name": "Tier 8",
+      "maxPopulation": -1,
+      "tierResourceConstraints": {
+        "food": 4879182,
+        "wood": 3520448,
+        "stone": 112893,
+        "gold": 112893
+      },
+      "tierMaxResources": {
+        "food": 94675645,
+        "wood": 142013468,
+        "stone": 9467565,
+        "gold": 9467565
+      },
+      "populationChangeFactorRange": [
+        -0.05,
+        0.03
+      ]
     }
   ],
-  "ResourceScoreMultiplier": {
-    "Population": 10,
+  "ResourceScoreMultiplier": /*Points awarded to each resource*/ {
+    "Population": 25,
     "Food": 1,
-    "Wood": 2,
-    "Stone": 3,
-    "Gold": 3
+    "Wood": 1,
+    "Stone": 2,
+    "Gold": 2
   },
   "ResourceGenerationConfig": {
     "Farm": {
@@ -99,20 +218,24 @@
         "Base"
       ],
       "QuantityRangePerRegion": [
-        3,
-        10
+        9,
+        17
       ],
       "MaxUnitsRange": [
-        500,
-        10000
+        10000,
+        12500
       ],
       "RewardRange": [
-        5,
+        4,
         7
       ],
       "WorkTimeRange": [
-        2,
-        4
+        1,
+        3
+      ],
+      "AmountRange": [
+        225000,
+        250000
       ],
       "RegenerationRateRange": {
         "TickRange": [
@@ -120,8 +243,8 @@
           7
         ],
         "AmountRange": [
-          3,
-          4
+          22500,
+          25000
         ]
       }
     },
@@ -132,24 +255,24 @@
         "Base"
       ],
       "QuantityRangePerRegion": [
-        5,
+        13,
         35
       ],
       "MaxUnitsRange": [
-        20,
-        45
+        1000,
+        1000
       ],
       "RewardRange": [
-        10,
-        12
-      ],
-      "WorkTimeRange": [
-        7,
+        6,
         11
       ],
+      "WorkTimeRange": [
+        3,
+        7
+      ],
       "AmountRange": [
-        500,
-        7500
+        50000,
+        72500
       ]
     },
     "Stone": {
@@ -158,71 +281,75 @@
         "NonBase"
       ],
       "QuantityRangePerRegion": [
-        0,
+        1,
         7
       ],
       "MaxUnitsRange": [
-        30,
-        100
+        1000,
+        1000
       ],
       "RewardRange": [
-        100,
-        250
+        1,
+        7
       ],
       "WorkTimeRange": [
-        24,
-        32
+        10,
+        15
       ],
       "AmountRange": [
-        10000,
-        50000
+        25000,
+        32500
       ]
     },
     "Gold": {
       "ProximityDistance": 11,
       "DistributionZones": [
         "NonBase"
-      ],
+      ], //TODO: update this
       "QuantityRangePerRegion": [
         0,
         7
       ],
       "MaxUnitsRange": [
-        30,
-        100
+        1000,
+        1000
       ],
       "RewardRange": [
-        100,
-        250
+        1,
+        7
       ],
       "WorkTimeRange": [
-        24,
-        32
+        10,
+        15
       ],
       "AmountRange": [
-        10000,
-        50000
+        25000,
+        32500
       ]
     },
     "Campfire": {
       "RewardRange": [
-        3,
-        3
+        5,
+        5
       ],
       "WorkTimeRange": [
         1,
         1
       ],
       "ResourceConsumption": {
-        "Wood": [ 3, 3 ]
+        "Wood": [
+          3,
+          3
+        ]
       }
     }
   },
   "UnitConsumptionRatio": {
     "Food": 1,
-    "Wood": 1,
-    "Stone": 1,
-    "Gold": 1
+    "Wood": 0,
+    "Stone": 0,
+    "Gold": 0,
+    "Heat": 1
   },
   "ScoreRates": {
     "1": 10,
@@ -234,13 +361,89 @@
     "PlayerSeeds": [
       13123,
       76545,
-      12312
+      12312,
+      83475
     ],
     "MaxSeed": 30000,
     "MinSeed": 1
   },
   "ResourceImportance": {
-    "Food": 1,
-    "Heat": 1
-  }
+    "Food": 1.2,
+    "Heat": 0.9
+  },
+  "Buildings": /*Manages the status effects of buildings*/ [
+    {
+      "BuildingType": "Base", // Base
+      "StatusEffectMultiplier": "0",
+      "TerritorySquare": "3",
+      "ScoreMultiplier": "0",
+      "BuildTime": "0",
+      "Cost": {
+        "Wood": "0",
+        "Stone": "0",
+        "Gold": "0"
+      }
+    },
+    {
+      "BuildingType": "Quarry", // Increase the amount of stone/gold collected in mines
+      "StatusEffectMultiplier": "3",
+      "TerritorySquare": "2",
+      "ScoreMultiplier": "6",
+      "BuildTime": "5",
+      "Cost": {
+        "Wood": "100",
+        "Stone": "100",
+        "Gold": "50"
+      }
+    },
+    {
+      "BuildingType": "FarmersGuild", // Increase the amount of food collected on farms
+      "StatusEffectMultiplier": "3",
+      "TerritorySquare": "2",
+      "ScoreMultiplier": "4",
+      "BuildTime": "5",
+      "Cost": {
+        "Wood": "65",
+        "Stone": "65",
+        "Gold": "30"
+      }
+    },
+    {
+      "BuildingType": "LumberMill", // Increase the amount of wood collected in forrests
+      "StatusEffectMultiplier": "3",
+      "TerritorySquare": "1",
+      "ScoreMultiplier": "2",
+      "BuildTime": "5",
+      "Cost": {
+        "Wood": "50",
+        "Stone": "50",
+        "Gold": "20"
+      }
+    },
+    {
+      "BuildingType": "OutPost", // Increase the amount of territory greatly  
+      "StatusEffectMultiplier": "0",
+      "TerritorySquare": "3",
+      "ScoreMultiplier": "0",
+      "BuildTime": "10",
+      "Cost": {
+        "Wood": "250",
+        "Stone": "250",
+        "Gold": "125"
+      }
+    },
+    {
+      "BuildingType": "Road", // Increase the amount of territory by a small amount
+      "StatusEffectMultiplier": "0",
+      "TerritorySquare": "1",
+      "ScoreMultiplier": "0",
+      "BuildTime": "2",
+      "Cost": {
+        "Wood": "70",
+        "Stone": "70",
+        "Gold": "35"
+      }
+    }
+  ]
+
 }

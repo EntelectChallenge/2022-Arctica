@@ -14,7 +14,6 @@ namespace Engine.Interfaces
         void ApplyAfterTickStateChanges();
         int GetPlayerCount();
         GameStateDto GetPublishedState();
-        BotObject CreateBotObject(Guid id);
         BotObject GetBotById(Guid playerActionPlayerId);
         void AddBotObject(BotObject bot);
         GameCompletePayload GenerateGameCompletePayload();
@@ -22,10 +21,8 @@ namespace Engine.Interfaces
         int GetCurrentTick();
         IEnumerable<Guid> GetScoutTowerInformation(Guid id);
         string GetWorldState();
-        ISet<Position> GetClaimedTerritory();
         ISet<Position> GetPositionsInUse();
         void AddPositionInUse(Position position);
-        void UpdateTerritory(BotObject bot, List<Position> newTerritoryNodes);
         GameState GetState();
         ResourceNode GetResourceNode(Guid id);
         Node GetNode(Guid id);
@@ -33,10 +30,13 @@ namespace Engine.Interfaces
         ScoutTower GetScoutTower(Guid id);
         ResourceNode GetScoutTowerAsResourceNode(Guid id);
         ResourceNode GetBaseAsResourceNode(BotObject bot);
-        Node ResolveNode(PlayerAction playerAction);
         Position ResolveNodePosition(PlayerAction playerAction);
+        AvailableNode GetAvailableNode(BotObject bot, Guid id);
         void RemoveAvailableNode(Guid availableNodeId);
-        IList<AvailableNode> ValidateAvaialbleNodes(BotObject bot);
         void AddAvailableNodes(List<AvailableNode> buildingNodes);
+        Position GetNextBotPosition();
+        Node NodeByPosition(Position position);
+        ScoutTower GetScoutTowerByRegion(Position position);
+        ScoutTower CreateScoutTower(int i, int j);
     }
 }
