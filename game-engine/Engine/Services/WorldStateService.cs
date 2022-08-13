@@ -579,7 +579,7 @@ namespace Engine.Services
 
         private int GetMatchPointsFromPlacement(int placement) => ((engineConfig.BotCount - placement) + 1) * 2;
 
-        public Node NodeByPosition(Position position)
+        public Node? NodeByPosition(Position position)
         {
             return NodesByPosition.ContainsKey(position) ? NodesByPosition[position] : null;
         }

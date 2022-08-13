@@ -113,18 +113,25 @@ public class TerritoryService
         newBuildingTerritory.ForEach(position => CreateNewLand(bot, position));
     }
 
-    private Land CreateNewLand(BotObject bot, Position position)
+    private Land? CreateNewLand(BotObject bot, Position position)
     {
+        // check if the contained node is null, if it is the position isn't an
+        // available node (e.g. a scout tower position)
         var containedNode = worldStateService.NodeByPosition(position);
+        if (containedNode == null) {
+            return null;
+        }
+
         var land = new Land(position, bot.BotId, containedNode.Id);
+
         LandByPosition[containedNode.Position] = land;
         LandByNodeId[containedNode.Id] = land;
         AddOccupantsToLand(land, bot, 0);
-        
+
         bot.Territory.AddLand(land);
         worldStateService.GetScoutTowerByRegion(land).AddTerritoryNode(land);
         claimedTerritory.Add(land);
-        
+
         return land;
     }
 
