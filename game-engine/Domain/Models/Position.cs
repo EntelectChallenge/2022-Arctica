@@ -26,9 +26,13 @@ namespace Domain.Models
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return Equals((Position) obj);
+            if (obj is Position) {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                return Equals((Position) obj);
+            }
+
+            return false;
         }
 
         public override int GetHashCode()
