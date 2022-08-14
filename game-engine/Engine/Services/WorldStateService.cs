@@ -22,7 +22,7 @@ namespace Engine.Services
         private readonly ISet<Position> woodPositionsInUse = new HashSet<Position>();
         private readonly ISet<Position> stonePositionsInUse = new HashSet<Position>();
         private readonly ISet<Position> goldPositionsInUse = new HashSet<Position>();
-        private readonly ISet<Position> scoutTowersPositionsInUse = new HashSet<Position>();
+        public ISet<Position> ScoutTowerPositionsInUse { get; } = new HashSet<Position>();
 
         private readonly Dictionary<Position, Node> NodesByPosition = new Dictionary<Position, Node>();
 
@@ -307,7 +307,7 @@ namespace Engine.Services
             int lowerY = j * regionSize;
             int upperY = (j + 1) * regionSize;
 
-            var newScoutTower = new ScoutTower(GenerateRandomPosition(lowerX, upperX, lowerY, upperY, scoutTowersPositionsInUse, 1,
+            var newScoutTower = new ScoutTower(GenerateRandomPosition(lowerX, upperX, lowerY, upperY, ScoutTowerPositionsInUse, 1,
                     false, true))
             {
                 Id = Guid.NewGuid(),

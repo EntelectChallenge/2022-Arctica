@@ -38,5 +38,6 @@ namespace Engine.Interfaces
         Node NodeByPosition(Position position);
         ScoutTower GetScoutTowerByRegion(Position position);
         ScoutTower CreateScoutTower(int i, int j);
+        ISet<Position> ScoutTowerPositionsInUse { get; }
     }
 }

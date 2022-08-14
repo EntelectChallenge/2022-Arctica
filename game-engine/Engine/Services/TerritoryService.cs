@@ -105,12 +105,17 @@ public class TerritoryService
     private void AddBuildingTerritory(BotObject bot, BuildingObject building)
     {
         var buildingTerritory = GetPositionsInBuildingRadius(building);
-        var newBuildingTerritory = buildingTerritory.Where(position => !claimedTerritory.Contains(position)).ToList();
+        var newBuildingTerritory = buildingTerritory.Where(PositionIsClaimable).ToList();
         
         // creating new available nodes here just before creating the new land since it requires the worldStateService having all the available and resource nodes 
         CreateAvailableNodes(bot, newBuildingTerritory);
 
         newBuildingTerritory.ForEach(position => CreateNewLand(bot, position));
+    }
+
+    private bool PositionIsClaimable(Position position)
+    {
+        return !(claimedTerritory.Contains(position) || worldStateService.ScoutTowerPositionsInUse.Contains(position));
     }
 
     private Land CreateNewLand(BotObject bot, Position position)
