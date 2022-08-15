@@ -27,7 +27,7 @@ namespace GameRunner
                     o =>
                     {
                         o.EnableDetailedErrors = true;
-                        o.MaximumReceiveMessageSize = 2000000;
+                        o.MaximumReceiveMessageSize = 40000000;
                     })
               //  .AddJsonProtocol(options => { options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()); })
                 .AddMessagePackProtocol();

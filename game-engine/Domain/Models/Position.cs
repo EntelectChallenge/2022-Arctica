@@ -28,7 +28,7 @@ namespace Domain.Models
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof(Position) || obj.GetType() != typeof(Land)) return false;
+            if (obj.GetType() != typeof(Position) && obj.GetType() != typeof(Land)) return false;
             return Equals((Position) obj);
         }
 
