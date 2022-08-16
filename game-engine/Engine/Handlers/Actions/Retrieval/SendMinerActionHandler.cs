@@ -47,8 +47,7 @@ namespace Engine.Handlers.Actions.Retrieval
             {
                 var botPopulationTier = calculationService.GetBotPopulationTier(playerAction.Bot);
 
-                double distributionFactor =
-                    Convert.ToDouble(calculatedTotalAmount) / Convert.ToDouble(totalUnitsAtResource);
+                double distributionFactor = calculationService.CalculateDistributionFactor(calculatedTotalAmount, totalUnitsAtResource);
                 var resourceDistributed = (int)Math.Round(playerAction.NumberOfUnits * distributionFactor);
 
 
