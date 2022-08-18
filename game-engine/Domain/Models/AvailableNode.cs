@@ -9,11 +9,21 @@ namespace Domain.Models
 {
     public class AvailableNode : Node
     {
-        //TODO: change production speed depending on the number of units sent
-
+        private bool isUsed;
         public AvailableNode(Position position) : base(GameObjectType.AvailableNode, position)
         {
            Type = ResourceType.Available;
+           isUsed = false;
+        }
+
+        public bool IsUsed()
+        {
+            return isUsed;
+        }
+
+        public void Use()
+        {
+            isUsed = true;
         }
     }
 }

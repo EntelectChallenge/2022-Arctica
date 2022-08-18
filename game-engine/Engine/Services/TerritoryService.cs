@@ -90,6 +90,8 @@ public class TerritoryService
     {
         var buildingNode = worldStateService.NodeByPosition(building.Position);
         if (buildingNode.GetType() != typeof(AvailableNode)) return;
+        if (((AvailableNode) buildingNode).IsUsed()) return;
+        if (!bot.Territory.Contains(building.Position)) return;
 
         bot.Buildings.Add(building);
         RemoveAvailableNodeWhereBuildingIsPlaced(bot, (AvailableNode)buildingNode);
@@ -98,6 +100,7 @@ public class TerritoryService
 
     private void RemoveAvailableNodeWhereBuildingIsPlaced(BotObject bot, AvailableNode availableNode)
     {
+        availableNode.Use();
         bot.RemoveAvailableNode(availableNode.Id);
         worldStateService.RemoveAvailableNode(availableNode.Id);
     }
@@ -224,7 +227,7 @@ public class TerritoryService
         var land = GetLandByNodeId(territoryId);
 
         var unitsToLeaveLand = land.GetOccupantsByBotDictionary()[bot.BotId].Vacate();
-        bot.AvailableUnits += unitsToLeaveLand + 1; // the occupants + the messenger
+        bot.AvailableUnits += unitsToLeaveLand;
     }
 
     public bool HasOccupants(BotObject bot, Land land)

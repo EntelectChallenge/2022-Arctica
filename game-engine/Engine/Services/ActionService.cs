@@ -202,6 +202,15 @@ namespace Engine.Services
         {
             switch (action.ActionType)
             {
+                case ActionType.Quarry:
+                case ActionType.LumberMill:
+                case ActionType.FarmersGuild:
+                case ActionType.Road:
+                case ActionType.OutPost:
+                {
+                    // check that the node that we are building on is inside the territory
+                    return action.Bot.Territory.Contains(node.Position);
+                }
                 case ActionType.OccupyLand:
                 {
                     // The following criteria need to be met:

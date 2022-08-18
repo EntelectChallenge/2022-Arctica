@@ -255,8 +255,17 @@ namespace Engine.Services
                     foreach (var action in actions)
                     {
                         var newUnits = (int) Math.Floor(action.NumberOfUnits * distributionFactor);
-                        SendUnneededUnitsHome(action, newUnits);
-                        action.NumberOfUnits = newUnits;
+                        if (newUnits == 0)
+                        {
+                            Logger.LogInfo("ResourceNode Slot Distribution", $"Not enough space at node id {node.Id}, removing action for bot id {action.Bot.BotId}");
+                            action.Remove();
+                        }
+                        else
+                        {
+                            SendUnneededUnitsHome(action, newUnits); 
+                            action.NumberOfUnits = newUnits;
+                        }
+
                     }
                     var adjustedTotalUnits = actions.Sum(action => action.NumberOfUnits);
                     node.CurrentUnits += adjustedTotalUnits;
