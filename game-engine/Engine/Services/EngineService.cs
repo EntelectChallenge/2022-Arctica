@@ -424,6 +424,8 @@ namespace Engine.Services
             {
                 var targetNode = actionService.ResolveNode(independentPlayerAction);
 
+                if (targetNode == null) continue;
+                
                 actionService.HandleCompletedPlayerAction(targetNode,
                     new List<PlayerAction> { independentPlayerAction },
                     independentPlayerAction.ActionType);

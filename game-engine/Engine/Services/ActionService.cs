@@ -89,7 +89,8 @@ namespace Engine.Services
                     return worldStateService.GetAvailableNode(playerAction.Bot, playerAction.TargetNodeId);
                 case ActionType.OccupyLand:
                 case ActionType.LeaveLand:
-                    return worldStateService.GetNode(playerAction.TargetNodeId);
+                    var land = territoryService.GetLandByNodeId(playerAction.TargetNodeId);
+                    return land == null ? null : worldStateService.NodeByPosition(land);
                 case ActionType.Error:
                 default:
                     return null;
