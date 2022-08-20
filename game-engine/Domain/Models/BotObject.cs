@@ -109,7 +109,10 @@ namespace Domain.Models
         public void AddAction(PlayerAction playerAction)
         {
             AvailableUnits -= playerAction.NumberOfUnits;
-            PendingActions.Add(playerAction);
+            lock (PendingActions)
+            {
+                PendingActions.Add(playerAction);
+            }
         }
 
         public List<PlayerAction> GetActions()
@@ -124,7 +127,10 @@ namespace Domain.Models
             {
                 newActions = PendingActions.ToList();
                 PendingActions.Clear();
-                Actions.AddRange(newActions);
+                lock (Actions)
+                {
+                    Actions.AddRange(newActions);
+                }
             }
             return newActions;
         }
@@ -132,7 +138,10 @@ namespace Domain.Models
         public void RemoveAction(PlayerAction playerAction)
         {
             AvailableUnits += playerAction.NumberOfUnits;
-            Actions.Remove(playerAction);
+            lock (Actions)
+            {
+                Actions.Remove(playerAction);
+            }
         }
 
         public BotDto ToStateObject(GameState gameState) => new BotDto
@@ -150,12 +159,20 @@ namespace Domain.Models
             Stone = Stone,
             Gold = Gold,
             Heat = Heat,
-            PendingActions = PendingActions.Select(action => action.ToStateObject()).ToList(),
+            PendingActions = GetPendingActions(),
             Actions = Actions.Select(action => action.ToStateObject()).ToList(),
             Territory = Territory.LandInTerritory.ToList(),
             StatusMultiplier = StatusMultiplier,
             Buildings = Buildings
         };
+
+        private List<PlayerActionDto> GetPendingActions()
+        {
+            lock (PendingActions)
+            {
+                return PendingActions.Select(action => action.ToStateObject()).ToList();
+            }
+        }
 
         public void UpdateTerritory(Territory territory)
         {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Domain.Models;
+using Domain.Services;
 using Engine.Interfaces;
 
 namespace Engine.Services;
@@ -91,7 +92,7 @@ public class TerritoryService
         var buildingNode = worldStateService.NodeByPosition(building.Position);
         if (buildingNode.GetType() != typeof(AvailableNode)) return;
         if (((AvailableNode) buildingNode).IsUsed()) return;
-        if (!bot.Territory.Contains(building.Position)) return;
+        if (building.Type != BuildingType.Base && !bot.Territory.Contains(building.Position)) return;
 
         bot.Buildings.Add(building);
         RemoveAvailableNodeWhereBuildingIsPlaced(bot, (AvailableNode)buildingNode);
@@ -121,10 +122,17 @@ public class TerritoryService
         return !(claimedTerritory.Contains(position) || worldStateService.ScoutTowerPositionsInUse.Contains(position));
     }
 
-    private Land CreateNewLand(BotObject bot, Position position)
+    private void CreateNewLand(BotObject bot, Position position)
     {
         var containedNode = worldStateService.NodeByPosition(position);
         var land = new Land(position, bot.BotId, containedNode.Id);
+
+        if (containedNode == null)
+        {
+            Logger.LogInfo("CreateNewLand", $"Contained Node is null when trying to add land at position X:{position.X} Y:{position.Y}");
+            return;
+        }
+        
         LandByPosition[containedNode.Position] = land;
         LandByNodeId[containedNode.Id] = land;
         AddOccupantsToLand(land, bot, 0);
@@ -132,8 +140,6 @@ public class TerritoryService
         bot.Territory.AddLand(land);
         worldStateService.GetScoutTowerByRegion(land).AddTerritoryNode(land);
         claimedTerritory.Add(land);
-        
-        return land;
     }
 
     private List<AvailableNode> CreateAvailableNodes(BotObject bot, List<Position> territoryPositions)

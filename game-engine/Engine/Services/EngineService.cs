@@ -251,6 +251,7 @@ namespace Engine.Services
                             distributionFactor = availableSpace / totalUnits
                         This minimizes some computation
                         */
+                    var remainingValidActions = new List<PlayerAction>();
                     var distributionFactor = (double) availableSpace / totalUnitsToAdd;
                     foreach (var action in actions)
                     {
@@ -264,10 +265,11 @@ namespace Engine.Services
                         {
                             SendUnneededUnitsHome(action, newUnits); 
                             action.NumberOfUnits = newUnits;
+                            remainingValidActions.Add(action);
                         }
 
                     }
-                    var adjustedTotalUnits = actions.Sum(action => action.NumberOfUnits);
+                    var adjustedTotalUnits = remainingValidActions.Sum(action => action.NumberOfUnits);
                     node.CurrentUnits += adjustedTotalUnits;
                 }
                 else
