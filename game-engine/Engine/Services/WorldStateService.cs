@@ -124,7 +124,11 @@ namespace Engine.Services
         public void AddAvailableNodes(List<AvailableNode> buildingNodes)
         {
             state.World.Map.AvailableNodes.AddRange(buildingNodes);
-            buildingNodes.ForEach(node => NodesByPosition[node.Position] = node);
+            buildingNodes.ForEach(node =>
+            {
+                NodesByPosition[node.Position] = node;
+                positionsInUse.Add(node.Position);
+            });
         }
         
         public Position GetNextBotPosition()

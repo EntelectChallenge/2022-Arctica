@@ -125,7 +125,6 @@ public class TerritoryService
     private void CreateNewLand(BotObject bot, Position position)
     {
         var containedNode = worldStateService.NodeByPosition(position);
-        var land = new Land(position, bot.BotId, containedNode.Id);
 
         if (containedNode == null)
         {
@@ -133,6 +132,7 @@ public class TerritoryService
             return;
         }
         
+        var land = new Land(position, bot.BotId, containedNode.Id);
         LandByPosition[containedNode.Position] = land;
         LandByNodeId[containedNode.Id] = land;
         AddOccupantsToLand(land, bot, 0);
@@ -147,7 +147,6 @@ public class TerritoryService
         var positionsInUse = worldStateService.GetPositionsInUse();
         var availablePositionsInTerritory = territoryPositions.Where(position => !positionsInUse.Contains(position)).ToList();
         var availableNodes = availablePositionsInTerritory.Select(position => new AvailableNode(position){MaxUnits = 10 /*Is this necessary??*/}).ToList();
-        positionsInUse.UnionWith(availablePositionsInTerritory);
 
         worldStateService.AddAvailableNodes(availableNodes);
         bot.AddAvailableNodeIds(availableNodes.Select(node => node.Id));
